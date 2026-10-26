@@ -470,7 +470,7 @@
       *, *::before, *::after { animation: none !important; transition: none !important; }
     }
 
-    /* OHANAE official-site inspired interface: white, quiet, typographic. */
+    /* OHANAE official-site inspired interface with soft liquid glass surfaces. */
     .vignette {
       background:
         linear-gradient(180deg, rgba(255, 255, 255, .08), transparent 28%, transparent 72%, rgba(0, 0, 0, .12)),
@@ -479,13 +479,27 @@
     .grain { opacity: .035; }
 
     .brand, .cart-button, .sound-button, .official-shop-link {
-      border: 1px solid rgba(20, 20, 20, .2);
-      border-radius: 0;
-      background: rgba(255, 255, 253, .94);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .72);
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, .82), rgba(255, 255, 255, .48));
       color: #171717;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
-      -webkit-backdrop-filter: blur(16px);
-      backdrop-filter: blur(16px);
+      box-shadow:
+        0 16px 42px rgba(25, 18, 12, .12),
+        inset 0 1px 0 rgba(255, 255, 255, .95),
+        inset 0 -1px 0 rgba(255, 255, 255, .28);
+      -webkit-backdrop-filter: blur(24px) saturate(1.25);
+      backdrop-filter: blur(24px) saturate(1.25);
+    }
+    .brand::before, .cart-button::before, .sound-button::before, .official-shop-link::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 42%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .46), transparent);
+      pointer-events: none;
     }
     .brand {
       display: grid;
@@ -493,7 +507,7 @@
       gap: 4px;
       min-width: 270px;
       padding: 12px 16px 13px;
-      border-top: 3px solid #171717;
+      border-top-color: rgba(255, 255, 255, .92);
     }
     .brand-kicker {
       color: #171717 !important;
@@ -517,29 +531,32 @@
       letter-spacing: .08em;
       text-decoration: none;
     }
-    .cart-button, .sound-button { border-radius: 0; }
+    .cart-button, .sound-button { border-radius: 16px; }
     .cart-button:hover, .sound-button:hover, .official-shop-link:hover {
       transform: translateY(-2px);
-      border-color: #171717;
-      background: #fff;
+      border-color: rgba(255, 255, 255, .96);
+      background: rgba(255, 255, 255, .82);
     }
-    .cart-count { border-radius: 0; background: #171717; color: #fff; }
+    .cart-count { border-radius: 11px; background: #171717; color: #fff; }
 
     .floor-portal {
       min-width: 270px;
-      border: 0;
-      border-bottom: 1px solid rgba(20, 20, 20, .42);
-      border-radius: 0;
-      padding: 10px 4px 9px;
-      background: linear-gradient(90deg, rgba(255, 255, 253, .76), rgba(255, 255, 253, .28));
+      border: 1px solid rgba(255, 255, 255, .62);
+      border-radius: 20px;
+      padding: 11px 15px 11px 12px;
+      background: linear-gradient(105deg, rgba(255, 255, 255, .68), rgba(255, 255, 255, .3));
       color: #171717;
-      box-shadow: none;
+      box-shadow:
+        0 16px 38px rgba(24, 17, 11, .11),
+        inset 0 1px 0 rgba(255, 255, 255, .9);
+      -webkit-backdrop-filter: blur(18px) saturate(1.18);
+      backdrop-filter: blur(18px) saturate(1.18);
       transform: none;
     }
     .floor-portal:hover, .floor-portal:focus-visible {
       transform: translateX(6px);
-      border-color: #171717;
-      background: linear-gradient(90deg, rgba(255, 255, 253, .94), rgba(255, 255, 253, .48));
+      border-color: rgba(255, 255, 255, .94);
+      background: linear-gradient(105deg, rgba(255, 255, 255, .88), rgba(255, 255, 255, .46));
     }
     .portal-arrow {
       position: relative;
@@ -583,49 +600,55 @@
     .spot .tag text { fill: #171717; font-size: 16px; }
     .spot:hover .area, .spot:focus-visible .area { fill: rgba(255, 255, 255, .09); stroke: rgba(255, 255, 255, .9); }
 
-    .scrim { background: rgba(18, 18, 18, .28); }
+    .scrim { background: rgba(18, 18, 18, .2); }
     .panel {
-      top: 0;
-      right: 0;
-      bottom: 0;
+      top: 14px;
+      right: 14px;
+      bottom: 14px;
       width: min(480px, 100%);
-      border: 0;
-      border-left: 1px solid rgba(20, 20, 20, .18);
-      border-radius: 0;
-      background: rgba(255, 255, 253, .985);
+      border: 1px solid rgba(255, 255, 255, .74);
+      border-radius: 28px;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, .86), rgba(250, 249, 245, .69));
       color: #171717;
-      box-shadow: -18px 0 60px rgba(0, 0, 0, .14);
+      box-shadow:
+        -18px 18px 64px rgba(20, 14, 9, .18),
+        inset 0 1px 0 rgba(255, 255, 255, .96);
+      -webkit-backdrop-filter: blur(34px) saturate(1.22);
+      backdrop-filter: blur(34px) saturate(1.22);
     }
     .panel-head { border-bottom-color: rgba(20, 20, 20, .16); }
     .eyebrow { color: #555; }
     .panel-desc, .product p, .cart-line p, .prototype-note { color: #777; }
     .close {
       border-color: rgba(20, 20, 20, .25);
-      border-radius: 0;
-      background: transparent;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .38);
       color: #171717;
     }
     .product, .cart-line { border-bottom-color: rgba(20, 20, 20, .13); }
-    .product-mark { border-radius: 0; background: #f1f0ec; }
+    .product-mark { border-radius: 14px; background: rgba(241, 240, 236, .72); }
     .add {
       border-color: #171717;
-      border-radius: 0;
+      border-radius: 999px;
       color: #171717;
     }
     .add:hover { background: #171717; color: #fff; }
     .official-link { color: #666; }
     .official-link:hover { color: #111; }
-    .stepper { border-color: rgba(20, 20, 20, .2); border-radius: 0; }
-    .checkout { border-radius: 0; background: #171717; color: #fff; }
+    .stepper { border-color: rgba(20, 20, 20, .2); border-radius: 999px; }
+    .checkout { border-radius: 15px; background: #171717; color: #fff; }
     .panel-foot { border-top-color: rgba(20, 20, 20, .15); }
     .empty { color: #777; }
     .empty strong { color: #171717; }
     .toast {
       border-color: rgba(20, 20, 20, .22);
-      border-radius: 0;
-      background: rgba(255, 255, 253, .96);
+      border-radius: 16px;
+      background: rgba(255, 255, 253, .72);
       color: #171717;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, .12);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, .12), inset 0 1px 0 rgba(255, 255, 255, .9);
+      -webkit-backdrop-filter: blur(22px) saturate(1.2);
+      backdrop-filter: blur(22px) saturate(1.2);
     }
 
     @media (max-width: 680px) {
@@ -634,9 +657,9 @@
       .brand-main { display: grid; gap: 1px; }
       .brand #brandSub { display: block; font-size: 8px; }
       .official-shop-link { min-height: 42px; padding: 0 10px; font-size: 9px; }
-      .floor-portal { min-width: 218px; gap: 10px; padding: 9px 3px 8px; }
+      .floor-portal { min-width: 218px; gap: 10px; padding: 9px 12px; border-radius: 17px; }
       .portal-arrow { width: 46px; height: 18px; }
-      .panel { inset: auto 0 0; width: 100%; border-left: 0; border-top: 1px solid rgba(20, 20, 20, .18); border-radius: 0; }
+      .panel { inset: auto 8px max(8px, env(safe-area-inset-bottom)); width: auto; border-radius: 26px; }
     }
   </style>
 </head>
