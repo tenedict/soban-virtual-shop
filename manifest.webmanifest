@@ -1,0 +1,9 @@
+{
+  "name": "OHANAE Virtual Showroom",
+  "short_name": "OHANAE",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3eee4",
+  "theme_color": "#261b13",
+  "lang": "ko"
+}

@@ -4,7 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#261b13">
-  <title>소반 — 식탁 소품 가게</title>
+  <!-- 홈 화면에 추가하면 주소창 없이 전체 화면으로 열린다(아이폰은 브라우저 전체 화면을 지원하지 않는다) -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OHANAE">
+  <meta name="description" content="오하나에의 실제 패브릭 상품을 두 개의 실사 공간에서 둘러보는 가상 쇼룸">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>OHANAE — 두 개의 방, 하나의 취향</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
@@ -40,15 +47,62 @@
       background: #21170f;
     }
 
-    .scene {
+    /* 사진은 화면을 꽉 채운다(cover). 화면 비율이 사진과 다르면(폰 세로 화면) 남는 쪽을 밀어서 둘러본다. */
+    .stage {
       position: absolute;
       inset: 0;
-      width: 100%;
-      height: 100%;
+      overflow: auto;
+      overscroll-behavior: none;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .stage::-webkit-scrollbar { display: none; }
+    .store.pannable .stage { cursor: grab; }
+    .store.dragging .stage { cursor: grabbing; }
+
+    .scene {
+      position: fixed;
+      inset: 0;
       display: block;
+      width: 100vw;
+      height: 100vh;
       user-select: none;
       -webkit-user-select: none;
     }
+    @supports (height: 100dvh) {
+      .scene { height: 100dvh; }
+    }
+
+    /* 한눈에 보기: 사진 전체를 화면 안에 넣는다 */
+    .store.overview .stage { overflow: hidden; display: grid; place-items: center; }
+    .store.overview .scene { width: 100%; height: 100%; }
+    .store.overview .spot .tag { display: none; }
+
+    .pan-hint {
+      position: absolute;
+      z-index: 10;
+      left: 50%;
+      bottom: max(22px, calc(env(safe-area-inset-bottom) + 10px));
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 16px;
+      background: var(--glass);
+      box-shadow: 0 12px 36px var(--shadow), inset 0 1px rgba(255, 255, 255, .12);
+      -webkit-backdrop-filter: blur(18px) saturate(1.15);
+      backdrop-filter: blur(18px) saturate(1.15);
+      font-size: 13px;
+      color: rgba(255, 250, 240, .9);
+      pointer-events: none;
+      animation: enter-up .8s .6s both cubic-bezier(.2, .8, .2, 1);
+    }
+    .pan-hint b { color: var(--accent); font-weight: 400; animation: nudge 1.6s ease-in-out infinite; }
+    .pan-hint b:last-child { animation-direction: reverse; }
+    @keyframes nudge { 50% { transform: translateX(-4px); } }
 
     .vignette {
       position: absolute;
@@ -128,6 +182,7 @@
     .cart-count.bump { animation: bump .4s ease; }
     .sound-button { width: 46px; display: grid; place-items: center; padding: 0; }
     .sound-button svg { width: 18px; height: 18px; }
+    .sound-button[aria-pressed="true"] { background: rgba(255, 250, 240, .94); color: var(--ink); }
 
     .bottom-ui {
       position: absolute;
@@ -319,8 +374,9 @@
     }
     .panel-body { flex: 1; overflow-y: auto; padding: 8px 26px 22px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.25) transparent; }
 
-    .product { display: grid; grid-template-columns: 52px 1fr auto; gap: 14px; align-items: center; padding: 18px 0; border-bottom: 1px solid rgba(255, 255, 255, .11); }
-    .product-mark { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 16px; background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.05)); color: var(--accent); font-family: var(--display); font-size: 23px; }
+    .product { display: grid; grid-template-columns: 72px 1fr auto; gap: 14px; align-items: center; padding: 18px 0; border-bottom: 1px solid rgba(255, 255, 255, .11); }
+    .product-mark { width: 72px; height: 72px; display: grid; place-items: center; overflow: hidden; border-radius: 16px; background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.05)); color: var(--accent); font-family: var(--display); font-size: 23px; }
+    .product-mark img { width: 100%; height: 100%; display: block; object-fit: cover; }
     .product h3 { margin: 0 0 3px; font-size: 14px; font-weight: 600; }
     .product p { margin: 0; color: rgba(255, 250, 240, .54); font-size: 12px; }
     .product-side { text-align: right; }
@@ -336,6 +392,8 @@
       font-weight: 600;
     }
     .add:hover { background: var(--accent); color: var(--ink); }
+    .official-link { display: inline-block; margin-top: 7px; color: rgba(255, 250, 240, .65); font-size: 10px; text-decoration: none; }
+    .official-link:hover { color: var(--paper); text-decoration: underline; }
 
     .cart-line { display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: center; padding: 18px 0; border-bottom: 1px solid rgba(255, 255, 255, .11); }
     .cart-line h3 { margin: 0 0 4px; font-size: 14px; }
@@ -384,7 +442,9 @@
       .topbar { top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px; }
       .brand { padding: 7px 12px 8px; }
       .brand strong { font-size: 22px; }
-      .brand span, .cart-button > span:first-of-type, .sound-button { display: none; }
+      .brand span, .cart-button > span:first-of-type { display: none; }
+      .actions { gap: 8px; }
+      .sound-button { width: 42px; min-height: 42px; }
       .cart-button { padding-left: 11px; min-height: 42px; }
       .cart-count { height: 26px; min-width: 26px; }
       .guide { font-size: 12px; padding: 9px 13px; }
@@ -394,13 +454,13 @@
       .floor-portal { min-width: 220px; padding: 9px 14px 10px 10px; border-radius: 18px; }
       .portal-arrow { width: 46px; height: 46px; font-size: 29px; }
       .portal-copy strong { font-size: 15px; }
-      .panel { inset: auto 8px 8px; width: auto; max-height: min(80vh, 720px); border-radius: 22px; transform: translateY(calc(100% + 20px)); }
+      .panel { inset: auto 8px max(8px, env(safe-area-inset-bottom)); width: auto; max-height: min(80vh, 720px); max-height: min(80dvh, 720px); border-radius: 22px; transform: translateY(calc(100% + 20px)); padding-top: 0; }
       .panel-head { padding: 22px 20px 17px; }
       .panel-body { padding: 5px 20px 18px; }
       .panel-foot { padding: 16px 20px calc(18px + env(safe-area-inset-bottom)); }
       .panel h2 { font-size: 28px; }
-      .product { grid-template-columns: 46px 1fr auto; gap: 11px; }
-      .product-mark { width: 46px; height: 46px; }
+      .product { grid-template-columns: 58px 1fr auto; gap: 11px; }
+      .product-mark { width: 58px; height: 58px; }
       .tag { display: none; }
     }
 
@@ -411,78 +471,60 @@
 </head>
 <body>
   <main class="store" id="store">
-    <svg class="scene" id="scene" viewBox="0 0 1672 941" preserveAspectRatio="xMidYMid slice" role="img" aria-label="한국 식탁 소품과 생활 소품을 판매하는 소반 가게 내부">
+    <svg class="scene" id="scene" viewBox="0 0 1672 941" preserveAspectRatio="xMidYMid slice" role="img" aria-label="오하나에의 두 개 전시 공간">
       <g class="room active" data-room="table" aria-hidden="false">
-        <image href="soban-shop-interior.png" x="0" y="0" width="1672" height="941" preserveAspectRatio="xMidYMid slice"/>
+        <image href="ohanae-room-a.png" x="0" y="0" width="1672" height="941" preserveAspectRatio="xMidYMid slice"/>
 
-        <g class="spot" tabindex="0" role="button" data-cat="plate" aria-label="접시 상품 보기">
-          <polygon class="area" points="4,91 551,91 551,323 4,323"/>
-          <circle class="pulse" cx="294" cy="188" r="14"/><circle class="core" cx="294" cy="188" r="9"/>
-          <g class="tag"><rect x="237" y="132" width="114" height="36" rx="18"/><text x="294" y="156" text-anchor="middle">접시</text></g>
+        <g class="spot" tabindex="0" role="button" data-cat="white_table" aria-label="화이트 레이스 패브릭 상품 보기">
+          <polygon class="area" points="342,528 818,528 824,883 352,883"/>
+          <circle class="pulse" cx="620" cy="650" r="14"/><circle class="core" cx="620" cy="650" r="9"/>
+          <g class="tag"><rect x="536" y="594" width="168" height="36" rx="18"/><text x="620" y="618" text-anchor="middle">화이트 레이스</text></g>
         </g>
 
-        <g class="spot" tabindex="0" role="button" data-cat="bowl" aria-label="그릇 상품 보기">
-          <polygon class="area" points="2,329 552,329 552,688 2,688"/>
-          <circle class="pulse" cx="300" cy="463" r="14"/><circle class="core" cx="300" cy="463" r="9"/>
-          <g class="tag"><rect x="243" y="407" width="114" height="36" rx="18"/><text x="300" y="431" text-anchor="middle">그릇</text></g>
+        <g class="spot" tabindex="0" role="button" data-cat="brown_table" aria-label="브라운 테이블 매트 상품 보기">
+          <polygon class="area" points="760,500 1166,500 1178,668 760,668"/>
+          <circle class="pulse" cx="985" cy="560" r="14"/><circle class="core" cx="985" cy="560" r="9"/>
+          <g class="tag"><rect x="899" y="504" width="172" height="36" rx="18"/><text x="985" y="528" text-anchor="middle">브라운 테이블 매트</text></g>
         </g>
 
-        <g class="spot" tabindex="0" role="button" data-cat="mat" aria-label="받침과 테이블 매트 상품 보기">
-          <polygon class="area" points="559,649 1118,649 1090,827 622,845"/>
-          <circle class="pulse" cx="793" cy="716" r="14"/><circle class="core" cx="793" cy="716" r="9"/>
-          <g class="tag"><rect x="718" y="660" width="150" height="36" rx="18"/><text x="793" y="684" text-anchor="middle">받침 · 매트</text></g>
+        <g class="spot" tabindex="0" role="button" data-cat="purple_table" aria-label="퍼플 레이스 매트 상품 보기">
+          <polygon class="area" points="822,590 1422,590 1422,842 842,842"/>
+          <circle class="pulse" cx="1170" cy="700" r="14"/><circle class="core" cx="1170" cy="700" r="9"/>
+          <g class="tag"><rect x="1090" y="644" width="160" height="36" rx="18"/><text x="1170" y="668" text-anchor="middle">퍼플 레이스 매트</text></g>
         </g>
 
-        <g class="spot" tabindex="0" role="button" data-cat="spoon" aria-label="수저 상품 보기">
-          <polygon class="area" points="872,508 1002,508 1002,701 872,701"/>
-          <circle class="pulse" cx="947" cy="580" r="14"/><circle class="core" cx="947" cy="580" r="9"/>
-          <g class="tag"><rect x="890" y="524" width="114" height="36" rx="18"/><text x="947" y="548" text-anchor="middle">수저</text></g>
-        </g>
-
-        <g class="spot" tabindex="0" role="button" data-cat="mat" aria-label="벽걸이 매트 상품 보기">
-          <polygon class="area" points="1148,91 1668,91 1668,355 1148,355"/>
-          <circle class="pulse" cx="1285" cy="214" r="14"/><circle class="core" cx="1285" cy="214" r="9"/>
-          <g class="tag"><rect x="1210" y="158" width="150" height="36" rx="18"/><text x="1285" y="182" text-anchor="middle">테이블 매트</text></g>
-        </g>
-
-        <g class="spot" tabindex="0" role="button" data-action="cart" aria-label="계산대와 장바구니 열기">
-          <polygon class="area" points="1166,354 1670,354 1670,803 1166,803"/>
-          <circle class="pulse" cx="1285" cy="475" r="14"/><circle class="core" cx="1285" cy="475" r="9"/>
-          <g class="tag"><rect x="1201" y="419" width="168" height="36" rx="18"/><text x="1285" y="443" text-anchor="middle">계산대 · 장바구니</text></g>
+        <g class="spot" tabindex="0" role="button" data-cat="gift" aria-label="오하나에 선물 포장 보기">
+          <polygon class="area" points="1095,302 1418,302 1418,548 1095,548"/>
+          <circle class="pulse" cx="1260" cy="408" r="14"/><circle class="core" cx="1260" cy="408" r="9"/>
+          <g class="tag"><rect x="1200" y="352" width="120" height="36" rx="18"/><text x="1260" y="376" text-anchor="middle">선물 포장</text></g>
         </g>
       </g>
 
       <g class="room" data-room="accessory" aria-hidden="true">
-        <image href="soban-accessory-room.png" x="0" y="0" width="1672" height="941" preserveAspectRatio="xMidYMid slice"/>
+        <image href="ohanae-room-b.png" x="0" y="0" width="1672" height="941" preserveAspectRatio="xMidYMid slice"/>
 
-        <g class="spot" tabindex="-1" role="button" data-cat="keyring" aria-label="열쇠고리 상품 보기">
-          <polygon class="area" points="0,48 558,48 558,621 0,621"/>
-          <circle class="pulse" cx="310" cy="260" r="14"/><circle class="core" cx="310" cy="260" r="9"/>
-          <g class="tag"><rect x="244" y="204" width="132" height="36" rx="18"/><text x="310" y="228" text-anchor="middle">열쇠고리</text></g>
+        <g class="spot" tabindex="-1" role="button" data-cat="hanging" aria-label="숄더백과 행잉 패브릭 상품 보기">
+          <polygon class="area" points="54,116 675,116 675,512 54,512"/>
+          <circle class="pulse" cx="420" cy="285" r="14"/><circle class="core" cx="420" cy="285" r="9"/>
+          <g class="tag"><rect x="338" y="229" width="164" height="36" rx="18"/><text x="420" y="253" text-anchor="middle">숄더백 · 티슈 케이스</text></g>
         </g>
 
-        <g class="spot" tabindex="-1" role="button" data-cat="charm" aria-label="참 장식 상품 보기">
-          <polygon class="area" points="248,520 1104,520 1118,934 244,934"/>
-          <circle class="pulse" cx="716" cy="650" r="14"/><circle class="core" cx="716" cy="650" r="9"/>
-          <g class="tag"><rect x="650" y="594" width="132" height="36" rx="18"/><text x="716" y="618" text-anchor="middle">참 장식</text></g>
+        <g class="spot" tabindex="-1" role="button" data-cat="pouches" aria-label="레이스 플라워 파우치 상품 보기">
+          <polygon class="area" points="248,500 840,500 844,786 248,786"/>
+          <circle class="pulse" cx="560" cy="635" r="14"/><circle class="core" cx="560" cy="635" r="9"/>
+          <g class="tag"><rect x="484" y="579" width="152" height="36" rx="18"/><text x="560" y="603" text-anchor="middle">플라워 파우치</text></g>
         </g>
 
-        <g class="spot" tabindex="-1" role="button" data-cat="pouch" aria-label="파우치와 카드지갑 상품 보기">
-          <polygon class="area" points="1160,20 1670,20 1670,386 1160,386"/>
-          <circle class="pulse" cx="1290" cy="225" r="14"/><circle class="core" cx="1290" cy="225" r="9"/>
-          <g class="tag"><rect x="1217" y="169" width="146" height="36" rx="18"/><text x="1290" y="193" text-anchor="middle">파우치 · 지갑</text></g>
+        <g class="spot" tabindex="-1" role="button" data-cat="book" aria-label="브라운 레이스 북커버 상품 보기">
+          <polygon class="area" points="846,520 1280,520 1308,792 848,792"/>
+          <circle class="pulse" cx="1090" cy="650" r="14"/><circle class="core" cx="1090" cy="650" r="9"/>
+          <g class="tag"><rect x="1008" y="594" width="164" height="36" rx="18"/><text x="1090" y="618" text-anchor="middle">레이스 북커버</text></g>
         </g>
 
-        <g class="spot" tabindex="-1" role="button" data-cat="paper" aria-label="엽서와 선물 소품 보기">
-          <polygon class="area" points="1150,385 1670,385 1670,820 1150,820"/>
-          <circle class="pulse" cx="1290" cy="520" r="14"/><circle class="core" cx="1290" cy="520" r="9"/>
-          <g class="tag"><rect x="1214" y="464" width="152" height="36" rx="18"/><text x="1290" y="488" text-anchor="middle">엽서 · 선물</text></g>
-        </g>
-
-        <g class="spot" tabindex="-1" role="button" data-room-target="table" aria-label="문을 통해 식탁방으로 돌아가기">
-          <polygon class="area" points="620,60 1100,60 1100,526 620,526"/>
-          <circle class="pulse" cx="860" cy="190" r="14"/><circle class="core" cx="860" cy="190" r="9"/>
-          <g class="tag"><rect x="778" y="134" width="164" height="36" rx="18"/><text x="860" y="158" text-anchor="middle">식탁방으로</text></g>
+        <g class="spot" tabindex="-1" role="button" data-cat="lantern" aria-label="화이트 레이스 랜턴 커버 상품 보기">
+          <polygon class="area" points="1186,300 1455,300 1455,560 1186,560"/>
+          <circle class="pulse" cx="1320" cy="420" r="14"/><circle class="core" cx="1320" cy="420" r="9"/>
+          <g class="tag"><rect x="1238" y="364" width="164" height="36" rx="18"/><text x="1320" y="388" text-anchor="middle">랜턴 커버</text></g>
         </g>
       </g>
     </svg>
@@ -493,8 +535,8 @@
     <div class="grain"></div>
 
     <header class="topbar">
-      <div class="brand" aria-label="소반 식탁 소품 가게">
-        <strong>소반</strong><span id="brandSub">식탁 소품 가게</span>
+      <div class="brand" aria-label="오하나에 가상 쇼룸">
+        <strong>OHANAE</strong><span id="brandSub">ROOM A · TABLE FABRIC</span>
       </div>
       <div class="actions">
         <button class="sound-button" id="fullscreenButton" aria-label="전체 화면으로 보기" title="전체 화면">
@@ -508,13 +550,13 @@
     </header>
 
     <div class="floor-portals" id="guide" aria-label="다른 공간으로 이동">
-      <button class="floor-portal" data-room-button="accessory" aria-pressed="false" aria-label="열쇠고리와 작은 소품을 파는 다음 공간으로 이동">
+      <button class="floor-portal" data-room-button="accessory" aria-pressed="false" aria-label="가방과 파우치를 전시한 룸 비로 이동">
         <span class="portal-arrow" aria-hidden="true">←</span>
-        <span class="portal-copy"><small>NEXT SPACE</small><strong>열쇠고리 · 작은 소품</strong></span>
+        <span class="portal-copy"><small>NEXT · ROOM B</small><strong>가방 · 파우치 · 오브제</strong></span>
       </button>
-      <button class="floor-portal" data-room-button="table" aria-pressed="true" aria-label="식기와 테이블웨어를 파는 식탁방으로 이동" hidden>
+      <button class="floor-portal" data-room-button="table" aria-pressed="true" aria-label="테이블 패브릭을 전시한 룸 에이로 이동" hidden>
         <span class="portal-arrow" aria-hidden="true">←</span>
-        <span class="portal-copy"><small>BACK TO</small><strong>식기 · 테이블웨어</strong></span>
+        <span class="portal-copy"><small>BACK · ROOM A</small><strong>테이블 패브릭</strong></span>
       </button>
     </div>
   </main>
@@ -537,52 +579,38 @@
 
   <script>
     const CATEGORIES = {
-      plate: { title: '접시', place: '왼쪽 선반 위 칸', desc: '담는 순간 식탁의 표정이 달라지는 담백한 접시들.' },
-      bowl: { title: '그릇', place: '왼쪽 선반 가운데 · 아래 칸', desc: '매일 손이 가는 백자와 청자 그릇을 골랐어요.' },
-      mat: { title: '받침과 매트', place: '소반 위 · 오른쪽 벽', desc: '나무, 라탄, 린넨의 자연스러운 결을 식탁에 더해보세요.' },
-      spoon: { title: '수저', place: '소반 위 수저통', desc: '유기와 옻칠 나무로 완성한 정갈한 한 벌.' },
-      keyring: { title: '열쇠고리', place: '소품방 왼쪽 진열벽', desc: '나전, 매듭, 도자기와 나무로 만든 작은 한국의 모양.' },
-      charm: { title: '참 장식', place: '소품방 가운데 테이블', desc: '가방과 열쇠고리에 조합해 다는 작고 섬세한 장식.' },
-      pouch: { title: '파우치와 카드지갑', place: '소품방 오른쪽 위 선반', desc: '손에 닿는 촉감까지 편안한 천 소품을 모았어요.' },
-      paper: { title: '엽서와 선물', place: '소품방 오른쪽 아래 선반', desc: '가벼운 마음을 담아 건네기 좋은 종이 소품과 포장.' }
+      white_table: { title: 'White lace', place: 'ROOM A · 중앙 테이블 왼쪽', desc: '화이트 패브릭 위에 섬세한 레이스를 더한 오하나에의 테이블웨어.' },
+      brown_table: { title: 'Brown table mat', place: 'ROOM A · 중앙 테이블 안쪽', desc: '케이크와 차가 있는 시간을 차분하게 감싸는 브라운 매트.' },
+      purple_table: { title: 'Purple lace mat', place: 'ROOM A · 중앙 테이블 오른쪽', desc: '짙은 보라색 패브릭과 레이스가 만드는 오하나에의 대표 색감.' },
+      gift: { title: 'Gift wrapping', place: 'ROOM A · 포장 카운터', desc: '오하나에의 마음을 담아 선물 포장으로 마무리해 드려요.' },
+      hanging: { title: 'Bags & hanging fabric', place: 'ROOM B · 창가 행거', desc: '레이스와 깊은 보라색으로 완성한 숄더백과 행잉 티슈 케이스.' },
+      pouches: { title: 'Flower pouches', place: 'ROOM B · 중앙 테이블 왼쪽', desc: '입체적인 플라워 레이스 원단으로 만든 두 가지 파우치.' },
+      book: { title: 'Brown lace book cover', place: 'ROOM B · 중앙 테이블 오른쪽', desc: '브라운 원단과 레이스, 작은 버튼으로 마감한 북커버.' },
+      lantern: { title: 'White lace lantern cover', place: 'ROOM B · 낮은 수납장 위', desc: '빛을 부드럽게 거르는 화이트 플라워 레이스 랜턴 커버.' }
     };
 
     const PRODUCTS = [
-      { id: 'p1', cat: 'plate', name: '백자 앞접시', spec: '지름 15cm', price: 14000, mark: '白' },
-      { id: 'p2', cat: 'plate', name: '재유 원형 접시', spec: '지름 22cm', price: 28000, mark: '灰' },
-      { id: 'p3', cat: 'plate', name: '청자 오벌 접시', spec: '27 × 18cm', price: 36000, mark: '靑' },
-      { id: 'b1', cat: 'bowl', name: '백자 밥공기', spec: '지름 11.5cm · 300ml', price: 18000, mark: '白' },
-      { id: 'b2', cat: 'bowl', name: '분청 국대접', spec: '지름 16cm · 550ml', price: 26000, mark: '粉' },
-      { id: 'b3', cat: 'bowl', name: '청자유 면기', spec: '지름 19cm · 900ml', price: 32000, mark: '靑' },
-      { id: 'm1', cat: 'mat', name: '호두나무 코스터 2개', spec: '지름 10cm · 오일 마감', price: 12000, mark: '木' },
-      { id: 'm2', cat: 'mat', name: '라탄 코스터 4개', spec: '지름 11cm', price: 15000, mark: '藤' },
-      { id: 'm3', cat: 'mat', name: '린넨 테이블 매트', spec: '45 × 32cm · 물세탁 가능', price: 19000, mark: '布' },
-      { id: 'm4', cat: 'mat', name: '백자 수저받침 2개', spec: '길이 6cm', price: 9000, mark: '白' },
-      { id: 's1', cat: 'spoon', name: '방짜 유기 수저 1벌', spec: '놋쇠 · 숟가락 21cm', price: 48000, mark: '鍮' },
-      { id: 's2', cat: 'spoon', name: '옻칠 나무 젓가락 2벌', spec: '길이 22.5cm', price: 16000, mark: '漆' },
-      { id: 'k1', cat: 'keyring', name: '나전 달빛 키링', spec: '자개 · 황동 고리', price: 18000, mark: '月' },
-      { id: 'k2', cat: 'keyring', name: '매듭 노리개 키링', spec: '명주 매듭 · 술 장식', price: 16000, mark: '結' },
-      { id: 'k3', cat: 'keyring', name: '미니 소반 키링', spec: '호두나무 · 오일 마감', price: 14000, mark: '盤' },
-      { id: 'k4', cat: 'keyring', name: '청자 방울 키링', spec: '도자기 · 작은 방울', price: 15000, mark: '鈴' },
-      { id: 'c1', cat: 'charm', name: '자개 꽃 참', spec: '지름 2.8cm', price: 9000, mark: '花' },
-      { id: 'c2', cat: 'charm', name: '오색 매듭 태슬', spec: '길이 8cm', price: 11000, mark: '彩' },
-      { id: 'c3', cat: 'charm', name: '도자기 복주머니 참', spec: '수작업 유약', price: 12000, mark: '福' },
-      { id: 'u1', cat: 'pouch', name: '린넨 조임 파우치', spec: '12 × 15cm', price: 19000, mark: '布' },
-      { id: 'u2', cat: 'pouch', name: '누비 카드지갑', spec: '카드 6장 수납', price: 24000, mark: '縫' },
-      { id: 'u3', cat: 'pouch', name: '모시 미니 파우치', spec: '손바느질 마감', price: 22000, mark: '苧' },
-      { id: 'g1', cat: 'paper', name: '한옥 엽서 5장', spec: '무광 고급지', price: 8000, mark: '書' },
-      { id: 'g2', cat: 'paper', name: '민화 스티커 팩', spec: '방수 스티커 8장', price: 6000, mark: '畵' },
-      { id: 'g3', cat: 'paper', name: '소반 선물 상자', spec: '완충 포장 포함', price: 5000, mark: '贈' }
+      { id: 'o14', cat: 'white_table', name: 'white lace tea coaster', spec: 'OHANAE · white lace', price: 9000, photo: 'products/white-lace-tea-coaster.webp', url: 'https://ohanae.kr/PRODUCT/?idx=14' },
+      { id: 'o9', cat: 'white_table', name: 'white lace table mat', spec: 'OHANAE · white lace', price: 21000, photo: 'products/white-lace-table-mat.webp', url: 'https://ohanae.kr/PRODUCT/?idx=9' },
+      { id: 'o13', cat: 'brown_table', name: 'brown table mat', spec: 'OHANAE · brown fabric', price: 21000, photo: 'products/brown-table-mat.webp', url: 'https://ohanae.kr/PRODUCT/?idx=13' },
+      { id: 'o7', cat: 'purple_table', name: 'purple lace mat', spec: 'OHANAE · purple lace', price: 35000, photo: 'products/purple-lace-mat.webp', url: 'https://ohanae.kr/PRODUCT/?idx=7' },
+      { id: 'o15', cat: 'gift', name: '선물 포장', spec: 'OHANAE gift wrapping', price: 1000, photo: 'products/gift-wrap.webp', url: 'https://ohanae.kr/PRODUCT/?idx=15' },
+      { id: 'o11', cat: 'hanging', name: 'two tuck lace shoulder bag', spec: 'OHANAE · purple lace', price: 79000, photo: 'products/two-tuck-lace-shoulder-bag.webp', url: 'https://ohanae.kr/PRODUCT/?idx=11' },
+      { id: 'o10', cat: 'hanging', name: 'hanging tissue case', spec: 'OHANAE · white lace', price: 37000, photo: 'products/hanging-tissue-case.webp', url: 'https://ohanae.kr/PRODUCT/?idx=10' },
+      { id: 'o6', cat: 'pouches', name: 'purple lace flower pouch', spec: 'OHANAE · purple flower lace', price: 38000, photo: 'products/purple-lace-flower-pouch.webp', url: 'https://ohanae.kr/PRODUCT/?idx=6' },
+      { id: 'o1', cat: 'pouches', name: 'bold flower pouch', spec: 'OHANAE · white flower lace', price: 36000, photo: 'products/bold-flower-pouch.webp', url: 'https://ohanae.kr/PRODUCT/?idx=1' },
+      { id: 'o8', cat: 'book', name: 'brown lace book cover', spec: 'OHANAE · brown lace', price: 31000, photo: 'products/brown-lace-book-cover.webp', url: 'https://ohanae.kr/PRODUCT/?idx=8' },
+      { id: 'o12', cat: 'lantern', name: 'white lace lantern cover', spec: 'OHANAE · white flower lace', price: 34000, photo: 'products/white-lace-lantern-cover.webp', url: 'https://ohanae.kr/PRODUCT/?idx=12' }
     ];
 
     const $ = id => document.getElementById(id);
     const won = value => value.toLocaleString('ko-KR') + '원';
     const getProduct = id => PRODUCTS.find(product => product.id === id);
     const ROOM_META = {
-      table: { sub: '식탁 소품 가게', guide: '빛나는 물건을 눌러 둘러보세요', toast: '식탁방으로 돌아왔어요' },
-      accessory: { sub: '열쇠고리와 작은 소품', guide: '열쇠고리와 작은 소품을 눌러보세요', toast: '열쇠고리방에 들어왔어요' }
+      table: { sub: 'ROOM A · TABLE FABRIC', toast: 'Room A로 이동했어요' },
+      accessory: { sub: 'ROOM B · FABRIC & OBJECT', toast: 'Room B로 이동했어요' }
     };
-    const STORAGE_KEY = 'soban-photo-shop-cart';
+    const STORAGE_KEY = 'ohanae-virtual-shop-cart';
     let cart = {};
     let opener = null;
     let toastTimer;
@@ -619,9 +647,9 @@
     function productRows(category) {
       return PRODUCTS.filter(product => product.cat === category).map(product => `
         <article class="product">
-          <div class="product-mark" aria-hidden="true">${product.mark}</div>
+          <div class="product-mark"><img src="${product.photo}" alt="${product.name}" loading="lazy"></div>
           <div><h3>${product.name}</h3><p>${product.spec}</p></div>
-          <div class="product-side"><span class="price">${won(product.price)}</span><button class="add" data-add="${product.id}">담기</button></div>
+          <div class="product-side"><span class="price">${won(product.price)}</span><button class="add" data-add="${product.id}">담기</button><br><a class="official-link" href="${product.url}" target="_blank" rel="noopener">공식 상품 보기 ↗</a></div>
         </article>`).join('');
     }
 
@@ -675,7 +703,7 @@
 
       const total = ids.reduce((sum, id) => sum + getProduct(id).price * cart[id], 0);
       $('panelFoot').hidden = false;
-      $('panelFoot').innerHTML = `<div class="summary"><span>합계</span><span>${won(total)}</span></div><button class="checkout" id="checkoutButton">주문하기</button><p class="prototype-note">현재는 체험용 가상 매장입니다.</p>`;
+      $('panelFoot').innerHTML = `<div class="summary"><span>합계</span><span>${won(total)}</span></div><button class="checkout" id="checkoutButton">오하나에 공식몰에서 주문하기</button><p class="prototype-note">공식몰에서 상품 옵션과 재고를 다시 확인해 주세요.</p>`;
     }
 
     function addProduct(id) {
@@ -747,7 +775,7 @@
       if (button.dataset.roomButton) changeRoom(button.dataset.roomButton);
       if (button.dataset.add) addProduct(button.dataset.add);
       if (button.dataset.step) setQuantity(button.dataset.step, (cart[button.dataset.step] || 0) + Number(button.dataset.delta));
-      if (button.id === 'checkoutButton') showToast('시제품이라 결제는 아직 연결되지 않았어요');
+      if (button.id === 'checkoutButton') window.open('https://ohanae.kr/PRODUCT', '_blank', 'noopener');
     });
 
     $('cartButton').addEventListener('click', event => openCart(event.currentTarget));
