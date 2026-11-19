@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>OHANAE 3D 쇼룸 관리자 (시제품)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+  <style>
+    /* 관리자 페이지: 위에서 내려다본 매장 지도에서 물건을 끌어 놓고, 상품과 3D 모델을 관리한다.
+       고친 내용은 이 브라우저의 초안으로만 남고, 내보낸 layout.json 을 사이트에 올려야 모두에게 보인다. */
+    :root {
+      --bg: #f4f2ee; --surface: #ffffff; --ink: #1f1f22; --muted: #6a6a70; --line: #dfddd8; --soft: #ebe9e4;
+      --accent: #9a7a3c; --accent-soft: #f3ead8; --danger: #a8433a;
+      --display: "Gowun Batang", "AppleMyungjo", serif;
+      --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.5; }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+    .bar { max-width: 1180px; margin: 0 auto; padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .bar h1 { font-family: var(--display); font-size: 22px; margin: 0 auto 0 0; letter-spacing: .04em; }
+    .bar h1 small { font-family: var(--body); font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 8px; letter-spacing: 0; }
+    .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 3px; padding: 7px 14px; font-size: 13px; text-decoration: none; color: var(--ink); white-space: nowrap; }
+    .btn:hover { border-color: var(--accent); }
+    .btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .btn.danger { color: var(--danger); }
+    .btn.small { padding: 4px 11px; font-size: 12px; }
+    .status { max-width: 1180px; margin: 0 auto; padding: 0 16px 10px; color: var(--muted); font-size: 12px; }
+
+    main { max-width: 1180px; margin: 0 auto; padding: 18px max(16px, env(safe-area-inset-right)) 60px max(16px, env(safe-area-inset-left)); display: grid; grid-template-columns: minmax(280px, 400px) 1fr; gap: 22px; align-items: start; }
+    .map-card { position: sticky; top: 92px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; }
+    .map-card p { margin: 0 0 10px; color: var(--muted); font-size: 12px; }
+    #map { display: block; width: 100%; height: auto; max-height: calc(100vh - 190px); touch-action: none; user-select: none; -webkit-user-select: none; }
+    #map text { font-family: var(--body); pointer-events: none; }
+    .item { cursor: grab; }
+    .item circle { fill: var(--surface); stroke: var(--ink); stroke-width: .05; }
+    .item line { stroke: var(--ink); stroke-width: .06; stroke-linecap: round; }
+    .item.model circle { fill: var(--accent-soft); stroke: var(--accent); }
+    .item.on circle { fill: var(--ink); }
+    .item.on line { stroke: var(--accent); }
+    .item text { font-size: .2px; fill: var(--ink); }
+
+    section { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px; margin-bottom: 16px; }
+    section > h2 { font-family: var(--display); font-size: 19px; margin: 0 0 4px; }
+    section > .sub { margin: 0 0 14px; color: var(--muted); font-size: 12px; }
+    .head-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .head-row h2 { font-family: var(--display); font-size: 19px; margin: 0; }
+
+    .form { display: grid; grid-template-columns: 120px 1fr; gap: 10px 14px; align-items: center; }
+    .form label { color: var(--muted); font-size: 13px; }
+    .form input[type="text"], .form input[type="number"], .form input[type="url"], .form select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; background: var(--surface); min-width: 0; }
+    .form input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .with-value { display: grid; grid-template-columns: 1fr 64px; gap: 10px; align-items: center; }
+    .with-value output { font-variant-numeric: tabular-nums; font-size: 13px; text-align: right; color: var(--muted); }
+    .check { display: flex; align-items: center; gap: 8px; }
+    .place { background: var(--soft); border-radius: 8px; padding: 7px 10px; font-size: 13px; }
+    .form .full { grid-column: 1 / -1; }
+    .empty { color: var(--muted); padding: 10px 0; }
+
+    .list { display: flex; flex-direction: column; }
+    .prod { display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--soft); }
+    .prod:first-child { border-top: 0; }
+    .prod img, .prod .noimg { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--soft); display: grid; place-items: center; color: var(--muted); font-size: 11px; }
+    .prod b { display: block; font-weight: 600; font-size: 14px; }
+    .prod span { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .prod .acts { display: flex; gap: 6px; }
+    .prod-edit { grid-column: 1 / -1; background: var(--bg); border-radius: 12px; padding: 14px; margin-bottom: 6px; }
+    .tag { display: inline-block; font-size: 11px; border-radius: 999px; padding: 1px 8px; background: var(--soft); color: var(--muted); margin-left: 6px; }
+    .tag.local { background: var(--accent-soft); color: var(--accent); }
+    .note { background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #5c4a22; margin: 12px 0 0; }
+
+    .toast { position: fixed; z-index: 20; left: 50%; bottom: 22px; transform: translate(-50%, 80px); background: var(--ink); color: #fff; border-radius: 3px; padding: 9px 16px; font-size: 13px; transition: transform .25s; white-space: nowrap; max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis; }
+    .toast.show { transform: translate(-50%, 0); }
+
+    @media (max-width: 820px) {
+      main { grid-template-columns: 1fr; }
+      .map-card { position: static; }
+      #map { max-height: 70vh; }
+      .form { grid-template-columns: 96px 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <h1>OHANAE 쇼룸 관리자<small>시제품</small></h1>
+      <a class="btn primary" href="index.html?draft" target="_blank" rel="noopener">쇼룸에서 미리보기</a>
+      <button class="btn" id="exportBtn">내보내기</button>
+      <button class="btn" id="importBtn">가져오기</button>
+      <button class="btn danger" id="resetBtn">공개본으로 되돌리기</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+    <div class="status" id="status"></div>
+  </header>
+
+  <main>
+    <div class="map-card">
+      <p>동그라미를 끌어서 옮기세요. 짧은 선이 물건이 바라보는 쪽이에요. 테이블 위에 놓으면 그 위에, 바닥에 놓으면 받침대가 생겨요.</p>
+      <svg id="map" viewBox="-0.5 -0.5 9 17" role="img" aria-label="위에서 내려다본 매장 지도"></svg>
+    </div>
+
+    <div>
+      <section>
+        <div class="head-row"><h2>놓인 물건</h2><button class="btn small" id="addItem">물건 놓기</button></div>
+        <div id="itemForm"></div>
+      </section>
+
+      <section>
+        <div class="head-row"><h2>상품</h2><button class="btn small" id="addProduct">상품 추가</button></div>
+        <div class="list" id="products"></div>
+      </section>
+
+      <section>
+        <div class="head-row"><h2>3D 모델</h2><button class="btn small" id="addModel">.glb 파일 추가</button></div>
+        <input type="file" id="modelFile" accept=".glb,model/gltf-binary" multiple hidden>
+        <div class="list" id="models"></div>
+        <p class="note">사진을 3D 모델로 바꿔 주는 기능은 아직 연결 전이에요. 지금은 만들어 둔 .glb 파일을 추가해서, 위 「놓인 물건」에서 「3D 모델」로 바꿔 쓸 수 있어요. 추가한 파일은 이 브라우저에만 있고, 모두에게 보이려면 사이트의 <b>3d/models/</b> 폴더에도 올려야 해요.</p>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module">
+    import { W, DEPTH, DOOR, FURNITURE, PLANTS, furnitureAt, roomOf } from './space.js';
+    import { loadPublished, readDraft, writeDraft, clearDraft, putModel, deleteModel, listLocalModels } from './store.js';
+
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const won = v => Number(v || 0).toLocaleString('ko-KR') + '원';
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const snap = v => Math.round(v * 20) / 20;
+    const uid = prefix => prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+
+    let layout, selected = null, editing = null, localModels = [];
+    const product = id => layout.products.find(p => p.id === id);
+    const item = id => layout.items.find(i => i.id === id);
+
+    /* ───────── 저장 ───────── */
+    let toastTimer;
+    function toast(msg) { $('toast').textContent = msg; $('toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2400); }
+    function save() {
+      try {
+        writeDraft(layout);
+        $('status').textContent = `고친 내용은 이 브라우저에 저장됐어요 (${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}). 모두에게 보이게 하려면 「내보내기」로 받은 layout.json 을 사이트의 3d 폴더에 올려야 해요.`;
+      } catch (_) {
+        $('status').textContent = '저장하지 못했어요. 넣은 사진이 너무 많거나 커요 — 사진 수를 줄여 보세요.';
+      }
+    }
+
+    /* ───────── 지도 ───────── */
+    const mx = x => x + W, mz = z => z + DEPTH;
+    function drawMap() {
+      let s = `<rect x="0" y="0" width="${W * 2}" height="${DEPTH * 2}" fill="#fbfaf7" stroke="#1f1f22" stroke-width=".08"/>`;
+      s += `<line x1="0" y1="${DEPTH}" x2="${W - DOOR}" y2="${DEPTH}" stroke="#1f1f22" stroke-width=".12"/><line x1="${W + DOOR}" y1="${DEPTH}" x2="${W * 2}" y2="${DEPTH}" stroke="#1f1f22" stroke-width=".12"/>`;
+      s += `<text x=".2" y=".5" font-size=".32" fill="#9a7a3c" font-weight="600">ROOM B</text><text x=".2" y="${DEPTH + .5}" font-size=".32" fill="#9a7a3c" font-weight="600">ROOM A</text>`;
+      s += `<text x="${W}" y="${DEPTH * 2 + .38}" font-size=".26" fill="#6a6a70" text-anchor="middle">▲ 입구에서 들어오는 쪽</text>`;
+      for (const f of FURNITURE) {
+        s += `<rect x="${mx(f.x) - f.w / 2}" y="${mz(f.z) - f.d / 2}" width="${f.w}" height="${f.d}" rx=".05" fill="#ebe9e4" stroke="#b9b6ae" stroke-width=".03"/>`;
+        s += `<text x="${mx(f.x)}" y="${mz(f.z) + f.d / 2 + .26}" font-size=".19" fill="#8a8882" text-anchor="middle">${esc(f.label)}</text>`;
+      }
+      for (const [x, z] of PLANTS) s += `<circle cx="${mx(x)}" cy="${mz(z)}" r=".24" fill="#dfe8d8" stroke="#9db08f" stroke-width=".03"/>`;
+      for (const it of layout.items) {
+        const p = product(it.product), a = (it.rot || 0) * Math.PI / 180, cx = mx(it.x), cy = mz(it.z);
+        s += `<g class="item ${it.type === 'model' ? 'model' : ''} ${it.id === selected ? 'on' : ''}" data-item="${it.id}">
+          <circle cx="${cx}" cy="${cy}" r=".2"/><line x1="${cx}" y1="${cy}" x2="${cx + Math.sin(a) * .42}" y2="${cy + Math.cos(a) * .42}"/>
+          <text x="${cx}" y="${cy - .28}" text-anchor="middle">${esc((p?.name || '?').slice(0, 14))}</text></g>`;
+      }
+      $('map').innerHTML = s;
+    }
+    function mapPoint(e) {
+      const svg = $('map'), pt = svg.createSVGPoint();
+      pt.x = e.clientX; pt.y = e.clientY;
+      const q = pt.matrixTransform(svg.getScreenCTM().inverse());
+      return [q.x - W, q.y - DEPTH];
+    }
+    // 벽에 거는 물건은 가장 가까운 벽에 붙이고 방 안쪽을 보게 한다
+    function snapToWall(it) {
+      const side = it.z >= 0 ? 1 : -1;
+      const walls = [
+        { d: Math.abs(it.x + W), set: () => { it.x = -W + .03; it.rot = 90; } },
+        { d: Math.abs(it.x - W), set: () => { it.x = W - .03; it.rot = -90; } },
+        { d: Math.abs(it.z + DEPTH), set: () => { it.z = -DEPTH + .03; it.rot = 0; } },
+        { d: Math.abs(it.z - DEPTH), set: () => { it.z = DEPTH - .03; it.rot = 180; } }
+      ];
+      if (Math.abs(it.x) > DOOR + .3) walls.push({ d: Math.abs(it.z), set: () => { it.z = side * .13; it.rot = side > 0 ? 0 : 180; } });
+      walls.sort((a, b) => a.d - b.d)[0].set();
+    }
+    let dragging = null;
+    $('map').addEventListener('pointerdown', e => {
+      const g = e.target.closest('[data-item]');
+      if (!g) return;
+      dragging = g.dataset.item; select(dragging);
+      $('map').setPointerCapture(e.pointerId);
+    });
+    $('map').addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const it = item(dragging), [x, z] = mapPoint(e);
+      it.x = clamp(snap(x), -W + .05, W - .05); it.z = clamp(snap(z), -DEPTH + .05, DEPTH - .05);
+      if (it.hang) snapToWall(it);
+      drawMap(); updatePlace(it);
+    });
+    const endDrag = () => { if (dragging) { dragging = null; save(); drawItemForm(); } };
+    $('map').addEventListener('pointerup', endDrag);
+    $('map').addEventListener('pointercancel', endDrag);
+
+    /* ───────── 놓인 물건 ───────── */
+    function placeText(it) {
+      if (it.hang) return `Room ${roomOf(it.z)} 벽에 걸려 있어요`;
+      const f = furnitureAt(it.x, it.z);
+      return f ? `${f.label} 위` : `Room ${roomOf(it.z)} 바닥 · 받침대가 생겨요`;
+    }
+    function updatePlace(it) { const el = $('f_place'); if (el) el.textContent = placeText(it); }
+    function select(id) { selected = id; drawMap(); drawItemForm(); }
+    function drawItemForm() {
+      const it = item(selected);
+      if (!it) { $('itemForm').innerHTML = `<p class="empty">지도에서 동그라미를 누르면 여기서 고칠 수 있어요. 지금 ${layout.items.length}개가 놓여 있어요.</p>`; return; }
+      const models = layout.models || [];
+      $('itemForm').innerHTML = `<div class="form">
+        <label for="f_product">상품</label>
+        <select id="f_product">${layout.products.map(p => `<option value="${p.id}" ${p.id === it.product ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
+        <label for="f_type">보여 주는 방식</label>
+        <select id="f_type"><option value="frame" ${it.type !== 'model' ? 'selected' : ''}>사진 액자</option><option value="model" ${it.type === 'model' ? 'selected' : ''}>3D 모델</option></select>
+        ${it.type === 'model' ? `<label for="f_model">모델 파일</label>${models.length
+          ? `<select id="f_model">${models.map(m => `<option ${m === it.model ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select>`
+          : `<div class="place">아래 「3D 모델」에서 .glb 파일을 먼저 추가하세요. 그때까지는 사진 액자로 보여요.</div>`}` : ''}
+        <label for="f_size">크기</label>
+        <div class="with-value"><input type="range" id="f_size" min="0.2" max="1.2" step="0.02" value="${it.size || .5}"><output id="o_size">${Math.round((it.size || .5) * 100)}cm</output></div>
+        <label for="f_rot">바라보는 쪽</label>
+        <div class="with-value"><input type="range" id="f_rot" min="-180" max="180" step="5" value="${it.rot || 0}" ${it.hang ? 'disabled' : ''}><output id="o_rot">${it.rot || 0}°</output></div>
+        <label for="f_hang">벽에 걸기</label>
+        <div class="check"><input type="checkbox" id="f_hang" ${it.hang ? 'checked' : ''}><span>켜면 가장 가까운 벽에 붙어요</span></div>
+        ${it.hang ? `<label for="f_y">거는 높이</label><div class="with-value"><input type="range" id="f_y" min="0.8" max="2.4" step="0.05" value="${it.y ?? 1.45}"><output id="o_y">${Math.round((it.y ?? 1.45) * 100)}cm</output></div>` : ''}
+        <label>놓인 곳</label><div class="place" id="f_place">${esc(placeText(it))}</div>
+        <div class="full"><button class="btn small danger" id="f_delete">이 물건 치우기</button></div>
+      </div>`;
+    }
+    $('itemForm').addEventListener('input', e => {
+      const it = item(selected); if (!it) return;
+      const t = e.target;
+      if (t.id === 'f_size') { it.size = Number(t.value); $('o_size').textContent = Math.round(it.size * 100) + 'cm'; }
+      if (t.id === 'f_rot') { it.rot = Number(t.value); $('o_rot').textContent = it.rot + '°'; drawMap(); }
+      if (t.id === 'f_y') { it.y = Number(t.value); $('o_y').textContent = Math.round(it.y * 100) + 'cm'; }
+      save();
+    });
+    $('itemForm').addEventListener('change', e => {
+      const it = item(selected); if (!it) return;
+      const t = e.target;
+      if (t.id === 'f_product') it.product = t.value;
+      if (t.id === 'f_type') { it.type = t.value; if (it.type === 'model') { it.model = it.model || (layout.models || [])[0] || ''; if (it.size > .6) it.size = .4; } }
+      if (t.id === 'f_model') it.model = t.value;
+      if (t.id === 'f_hang') { it.hang = t.checked; if (it.hang) { it.y = it.y ?? 1.45; snapToWall(it); } else { delete it.y; it.x = clamp(it.x, -W + .4, W - .4); it.z = clamp(it.z, -DEPTH + .4, DEPTH - .4); } }
+      save(); drawAll();
+    });
+    $('itemForm').addEventListener('click', e => {
+      if (e.target.id !== 'f_delete') return;
+      layout.items = layout.items.filter(i => i.id !== selected);
+      selected = null; save(); drawAll(); toast('물건을 치웠어요');
+    });
+    $('addItem').onclick = () => {
+      if (!layout.products.length) return toast('상품을 먼저 추가하세요');
+      // 아직 안 놓인 상품이 있으면 그것부터, 입구 앞 빈 바닥에 놓는다
+      const placed = new Set(layout.items.map(i => i.product));
+      const p = layout.products.find(q => !placed.has(q.id)) || layout.products[0];
+      const n = layout.items.length;
+      const it = { id: uid('i'), product: p.id, type: 'frame', x: snap(-2.4 + (n % 5) * 1.2), z: 6.4, rot: 0, size: .5 };
+      layout.items.push(it); save(); select(it.id); drawProducts(); toast(`${p.name} · 입구 앞에 놓았어요. 끌어서 옮기세요`);
+    };
+
+    /* ───────── 상품 ───────── */
+    function drawProducts() {
+      $('products').innerHTML = layout.products.map(p => {
+        const count = layout.items.filter(i => i.product === p.id).length;
+        const row = `<div class="prod">
+          ${p.photo ? `<img src="${esc(p.photo)}" alt="">` : `<div class="noimg">사진</div>`}
+          <div><b>${esc(p.name)}</b><span>${won(p.price)} · ${count ? `${count}곳에 놓임` : '아직 안 놓임'}</span></div>
+          <div class="acts"><button class="btn small" data-edit="${p.id}">${editing === p.id ? '닫기' : '고치기'}</button></div>
+        </div>`;
+        if (editing !== p.id) return row;
+        return row + `<div class="prod-edit"><div class="form" data-product="${p.id}">
+          <label for="p_name">이름</label><input type="text" id="p_name" value="${esc(p.name)}">
+          <label for="p_price">가격(원)</label><input type="number" id="p_price" min="0" step="100" value="${Number(p.price) || 0}">
+          <label for="p_spec">짧은 설명</label><input type="text" id="p_spec" value="${esc(p.spec || '')}">
+          <label for="p_url">판매 페이지 주소</label><input type="url" id="p_url" placeholder="https://" value="${esc(p.url || '')}">
+          <label for="p_photo">사진</label><input type="file" id="p_photo" accept="image/*">
+          <div class="full"><button class="btn small danger" data-remove="${p.id}">이 상품 지우기</button></div>
+        </div></div>`;
+      }).join('') || '<p class="empty">상품이 없어요. 「상품 추가」를 눌러 주세요.</p>';
+    }
+    // 사진은 긴 변 900px 로 줄여 배치 정보 안에 함께 담는다(따로 올릴 파일이 없게)
+    async function shrinkPhoto(file) {
+      const bmp = await createImageBitmap(file);
+      const k = Math.min(1, 900 / Math.max(bmp.width, bmp.height));
+      const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      return c.toDataURL('image/jpeg', .85);
+    }
+    $('products').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.edit) { editing = editing === b.dataset.edit ? null : b.dataset.edit; drawProducts(); }
+      if (b.dataset.remove) {
+        const p = product(b.dataset.remove);
+        layout.products = layout.products.filter(q => q.id !== p.id);
+        layout.items = layout.items.filter(i => i.product !== p.id);
+        editing = null; if (!item(selected)) selected = null;
+        save(); drawAll(); toast(`${p.name} · 상품과 놓인 물건을 지웠어요`);
+      }
+    });
+    $('products').addEventListener('change', async e => {
+      const form = e.target.closest('[data-product]'); if (!form) return;
+      const p = product(form.dataset.product), t = e.target;
+      if (t.id === 'p_name') p.name = t.value.trim() || '이름 없는 상품';
+      if (t.id === 'p_price') p.price = Math.max(0, Math.round(Number(t.value) || 0));
+      if (t.id === 'p_spec') p.spec = t.value.trim();
+      if (t.id === 'p_url') p.url = t.value.trim();
+      if (t.id === 'p_photo' && t.files[0]) {
+        try { p.photo = await shrinkPhoto(t.files[0]); toast('사진을 넣었어요'); }
+        catch (_) { toast('이 사진은 읽지 못했어요. 다른 사진을 골라 주세요'); }
+      }
+      save(); drawAll();
+    });
+    $('addProduct').onclick = () => {
+      const p = { id: uid('p'), name: '새 상품', spec: '', price: 0, photo: '', url: '' };
+      layout.products.push(p); editing = p.id; save(); drawProducts();
+      $('p_name')?.focus(); $('p_name')?.select();
+    };
+
+    /* ───────── 3D 모델 ───────── */
+    function drawModels() {
+      const models = layout.models || [];
+      $('models').innerHTML = models.map(m => {
+        const used = layout.items.filter(i => i.type === 'model' && i.model === m).length;
+        return `<div class="prod" style="grid-template-columns: 1fr auto">
+          <div><b>${esc(m)}${localModels.includes(m) ? '<span class="tag local">이 브라우저에 있음</span>' : '<span class="tag">사이트에 올린 파일</span>'}</b><span>${used ? `${used}곳에서 쓰는 중` : '아직 안 씀'}</span></div>
+          <div class="acts"><button class="btn small danger" data-model="${esc(m)}">지우기</button></div>
+        </div>`;
+      }).join('') || '<p class="empty">추가한 3D 모델이 없어요.</p>';
+    }
+    $('addModel').onclick = () => $('modelFile').click();
+    $('modelFile').addEventListener('change', async e => {
+      const files = [...e.target.files];
+      for (const f of files) {
+        const name = f.name.replace(/[^\w.\-가-힣]+/g, '-');
+        await putModel(name, f);
+        layout.models = [...new Set([...(layout.models || []), name])];
+      }
+      e.target.value = '';
+      localModels = await listLocalModels();
+      save(); drawAll();
+      if (files.length) toast(`3D 모델 ${files.length}개를 추가했어요`);
+    });
+    $('models').addEventListener('click', async e => {
+      const b = e.target.closest('[data-model]'); if (!b) return;
+      const name = b.dataset.model;
+      layout.models = (layout.models || []).filter(m => m !== name);
+      layout.items.forEach(i => { if (i.model === name) { i.type = 'frame'; delete i.model; } });
+      try { await deleteModel(name); } catch (_) {}
+      localModels = await listLocalModels();
+      save(); drawAll(); toast('3D 모델을 지웠어요. 쓰던 물건은 사진 액자로 바꿨어요');
+    });
+
+    /* ───────── 내보내기 · 가져오기 · 되돌리기 ───────── */
+    $('exportBtn').onclick = () => {
+      const blob = new Blob([JSON.stringify(layout, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'layout.json'; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      const need = (layout.models || []).filter(m => localModels.includes(m));
+      toast(need.length ? `layout.json 을 받았어요. 모델 파일 ${need.length}개도 3d/models/ 에 올려야 해요` : 'layout.json 을 받았어요. 사이트의 3d 폴더에 올리면 반영돼요');
+    };
+    $('importBtn').onclick = () => $('importFile').click();
+    $('importFile').addEventListener('change', async e => {
+      const f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      try {
+        const next = JSON.parse(await f.text());
+        if (!Array.isArray(next.products) || !Array.isArray(next.items)) throw new Error();
+        layout = next; selected = editing = null; save(); drawAll(); toast('배치 파일을 불러왔어요');
+      } catch (_) { toast('이 파일은 배치 파일(layout.json)이 아니에요'); }
+    });
+    let resetArmed = false, resetTimer;
+    $('resetBtn').onclick = async () => {
+      if (!resetArmed) {   // 한 번 더 눌러야 되돌린다
+        resetArmed = true; $('resetBtn').textContent = '한 번 더 누르면 되돌려요';
+        resetTimer = setTimeout(() => { resetArmed = false; $('resetBtn').textContent = '공개본으로 되돌리기'; }, 4000);
+        return;
+      }
+      clearTimeout(resetTimer); resetArmed = false; $('resetBtn').textContent = '공개본으로 되돌리기';
+      try {
+        layout = await loadPublished(); clearDraft(); selected = editing = null; drawAll();
+        $('status').textContent = '사이트에 올라가 있는 배치로 되돌렸어요.';
+        toast('공개본으로 되돌렸어요');
+      } catch (_) { toast('공개본을 불러오지 못했어요'); }
+    };
+
+    function drawAll() { drawMap(); drawItemForm(); drawProducts(); drawModels(); }
+
+    /* ───────── 시작 ───────── */
+    const draft = readDraft();
+    try { layout = draft || await loadPublished(); }
+    catch (_) { layout = { version: 1, products: [], models: [], items: [] }; }
+    layout.models = layout.models || [];
+    try { localModels = await listLocalModels(); } catch (_) { localModels = []; }
+    $('status').textContent = draft
+      ? '이 브라우저에 남아 있던 초안을 이어서 고치는 중이에요. 처음 상태로 가려면 「공개본으로 되돌리기」를 누르세요.'
+      : '사이트에 올라가 있는 배치에서 시작했어요. 고치면 이 브라우저에 자동으로 저장돼요.';
+    drawAll();
+  </script>
+</body>
+</html>

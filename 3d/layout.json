@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "products": [
+    { "id": "o14", "name": "white lace tea coaster", "spec": "OHANAE · white lace", "price": 9000, "photo": "../products/white-lace-tea-coaster.webp", "url": "https://ohanae.kr/PRODUCT/?idx=14" },
+    { "id": "o9", "name": "white lace table mat", "spec": "OHANAE · white lace", "price": 21000, "photo": "../products/white-lace-table-mat.webp", "url": "https://ohanae.kr/PRODUCT/?idx=9" },
+    { "id": "o13", "name": "brown table mat", "spec": "OHANAE · brown fabric", "price": 21000, "photo": "../products/brown-table-mat.webp", "url": "https://ohanae.kr/PRODUCT/?idx=13" },
+    { "id": "o7", "name": "purple lace mat", "spec": "OHANAE · purple lace", "price": 35000, "photo": "../products/purple-lace-mat.webp", "url": "https://ohanae.kr/PRODUCT/?idx=7" },
+    { "id": "o15", "name": "선물 포장", "spec": "OHANAE gift wrapping", "price": 1000, "photo": "../products/gift-wrap.webp", "url": "https://ohanae.kr/PRODUCT/?idx=15" },
+    { "id": "o11", "name": "two tuck lace shoulder bag", "spec": "OHANAE · purple lace", "price": 79000, "photo": "../products/two-tuck-lace-shoulder-bag.webp", "url": "https://ohanae.kr/PRODUCT/?idx=11" },
+    { "id": "o10", "name": "hanging tissue case", "spec": "OHANAE · white lace", "price": 37000, "photo": "../products/hanging-tissue-case.webp", "url": "https://ohanae.kr/PRODUCT/?idx=10" },
+    { "id": "o6", "name": "purple lace flower pouch", "spec": "OHANAE · purple flower lace", "price": 38000, "photo": "../products/purple-lace-flower-pouch.webp", "url": "https://ohanae.kr/PRODUCT/?idx=6" },
+    { "id": "o1", "name": "bold flower pouch", "spec": "OHANAE · white flower lace", "price": 36000, "photo": "../products/bold-flower-pouch.webp", "url": "https://ohanae.kr/PRODUCT/?idx=1" },
+    { "id": "o8", "name": "brown lace book cover", "spec": "OHANAE · brown lace", "price": 31000, "photo": "../products/brown-lace-book-cover.webp", "url": "https://ohanae.kr/PRODUCT/?idx=8" },
+    { "id": "o12", "name": "white lace lantern cover", "spec": "OHANAE · white flower lace", "price": 34000, "photo": "../products/white-lace-lantern-cover.webp", "url": "https://ohanae.kr/PRODUCT/?idx=12" }
+  ],
+  "models": [],
+  "items": [
+    { "id": "i1", "product": "o14", "type": "frame", "x": -1.18, "z": 3.75, "rot": 0, "size": 0.36 },
+    { "id": "i2", "product": "o9", "type": "frame", "x": -0.72, "z": 3.5, "rot": 0, "size": 0.44 },
+    { "id": "i3", "product": "o13", "type": "frame", "x": 0.05, "z": 3.5, "rot": 0, "size": 0.5 },
+    { "id": "i4", "product": "o7", "type": "frame", "x": 1.0, "z": 3.5, "rot": 0, "size": 0.5 },
+    { "id": "i5", "product": "o15", "type": "frame", "x": 3.3, "z": 5.3, "rot": -90, "size": 0.5 },
+    { "id": "i6", "product": "o11", "type": "frame", "x": -3.97, "z": -2.9, "rot": 90, "size": 0.7, "hang": true, "y": 1.45 },
+    { "id": "i7", "product": "o10", "type": "frame", "x": -3.97, "z": -4.3, "rot": 90, "size": 0.6, "hang": true, "y": 1.45 },
+    { "id": "i8", "product": "o6", "type": "frame", "x": -0.5, "z": -3.9, "rot": 0, "size": 0.5 },
+    { "id": "i9", "product": "o1", "type": "frame", "x": 0.5, "z": -3.9, "rot": 0, "size": 0.5 },
+    { "id": "i10", "product": "o8", "type": "frame", "x": 3.15, "z": -2.6, "rot": -90, "size": 0.5 },
+    { "id": "i11", "product": "o12", "type": "frame", "x": -0.6, "z": -7.35, "rot": 0, "size": 0.48 }
+  ]
+}
