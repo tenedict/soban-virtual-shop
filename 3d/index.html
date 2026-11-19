@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>OHANAE 3D 쇼룸 (시제품)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+  <style>
+    /* 버리는 시제품: 1인칭으로 3D 매장 두 방을 걸어 다니며 상품을 누른다. 상품 · 장바구니 흐름은 2D 쇼룸과 같다.
+       조작은 한 손 기준이다 — 바닥을 누르면 그 자리로 걸어가고, 끌면 둘러보고, 상품을 누르면 다가가서 연다. */
+    :root {
+      --paper: #fffaf0;
+      --ink: #241a13;
+      --muted: rgba(255, 250, 240, .66);
+      --line: rgba(255, 255, 255, .22);
+      --glass: rgba(34, 25, 18, .58);
+      --glass-heavy: rgba(30, 22, 16, .9);
+      --accent: #e5c17a;
+      --shadow: rgba(0, 0, 0, .3);
+      --display: "Gowun Batang", "AppleMyungjo", serif;
+      --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; background: #1d150f; color: var(--paper); font-family: var(--body); }
+    button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    [hidden] { display: none !important; }
+    canvas { display: block; touch-action: none; }
+    #view { position: fixed; inset: 0; cursor: grab; }
+    #view.grabbing { cursor: grabbing; }
+    #view.pointing { cursor: pointer; }
+
+    .glass { border: 1px solid var(--line); background: var(--glass); box-shadow: 0 12px 36px var(--shadow), inset 0 1px rgba(255,255,255,.12); -webkit-backdrop-filter: blur(18px) saturate(1.15); backdrop-filter: blur(18px) saturate(1.15); }
+
+    .hud-top { position: fixed; z-index: 5; top: max(16px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); right: max(16px, env(safe-area-inset-right)); display: flex; justify-content: space-between; align-items: center; gap: 12px; pointer-events: none; }
+    .brand { pointer-events: auto; border-radius: 999px; padding: 8px 16px 9px; display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+    .brand strong { font-family: var(--display); font-size: 24px; letter-spacing: .08em; }
+    .brand span { font-size: 12px; color: var(--muted); letter-spacing: .08em; white-space: nowrap; }
+    .actions { display: flex; gap: 8px; pointer-events: auto; }
+    .cart-button { border-radius: 999px; display: flex; align-items: center; gap: 9px; padding: 7px 8px 7px 16px; min-height: 44px; }
+    .cart-count { min-width: 28px; height: 28px; display: grid; place-items: center; padding: 0 8px; border-radius: 999px; background: var(--accent); color: var(--ink); font-size: 12px; font-weight: 700; }
+    .cart-count.bump { animation: bump .4s ease; }
+    @keyframes bump { 50% { transform: scale(1.25); } }
+    .icon-button { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; padding: 0; }
+    .icon-button svg { width: 20px; height: 20px; }
+    .icon-button[aria-pressed="true"] { background: rgba(255, 250, 240, .94); color: var(--ink); }
+
+    /* 아래: 상품 둘러보기 */
+    .dock { position: fixed; z-index: 5; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(380px, calc(100% - 24px)); display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; border-radius: 999px; padding: 4px; }
+    .dock button { border: 0; background: transparent; border-radius: 999px; min-height: 46px; }
+    .dock .arrow { font-size: 24px; line-height: 1; color: var(--accent); }
+    .dock .arrow:active, .dock .label:active { background: rgba(255,255,255,.1); }
+    .dock .label { display: grid; gap: 1px; padding: 4px 8px; text-align: center; min-width: 0; }
+    .dock .label b { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dock .label span { font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+
+    .hint { position: fixed; z-index: 5; left: 50%; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 68px); transform: translateX(-50%); border-radius: 999px; padding: 8px 15px; font-size: 12px; color: rgba(255,250,240,.9); white-space: nowrap; pointer-events: none; transition: opacity .6s; }
+    .hint.gone { opacity: 0; }
+    .tip { position: fixed; z-index: 6; pointer-events: none; transform: translate(14px, 14px); border-radius: 12px; padding: 8px 12px; font-size: 13px; white-space: nowrap; }
+    .tip b { display: block; font-weight: 600; }
+    .tip span { color: var(--accent); font-size: 12px; }
+
+    /* 조이스틱 (켰을 때만) */
+    .stick { position: fixed; z-index: 5; left: max(24px, env(safe-area-inset-left)); bottom: calc(max(16px, env(safe-area-inset-bottom)) + 84px); width: 116px; height: 116px; border-radius: 50%; pointer-events: none; }
+    .stick i { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: rgba(255,250,240,.85); box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+
+    /* 첫 화면 */
+    .intro { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 50% 40%, rgba(40,28,18,.55), rgba(16,10,6,.86)); }
+    .intro-card { max-width: 420px; width: 100%; border-radius: 24px; padding: 28px 26px; text-align: center; }
+    .intro-card small { color: var(--accent); font-size: 11px; letter-spacing: .16em; font-weight: 600; }
+    .intro-card h1 { font-family: var(--display); font-size: 34px; margin: 6px 0 4px; letter-spacing: .06em; }
+    .intro-card p { margin: 0 0 18px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .keys { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; text-align: left; font-size: 13px; margin: 0 auto 22px; max-width: 290px; }
+    .keys kbd { font-family: var(--body); font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; background: rgba(255,255,255,.08); white-space: nowrap; justify-self: start; }
+    .enter { width: 100%; border: 0; border-radius: 14px; background: var(--accent); color: var(--ink); padding: 14px; font-weight: 700; font-size: 15px; }
+    .enter:disabled { opacity: .6; }
+    .loading { margin-top: 10px; font-size: 12px; color: var(--muted); }
+
+    /* 상품 창 · 장바구니 */
+    .scrim { position: fixed; inset: 0; z-index: 20; background: rgba(12,8,5,.42); opacity: 0; pointer-events: none; transition: opacity .3s; }
+    .scrim.open { opacity: 1; pointer-events: auto; }
+    .panel { position: fixed; z-index: 21; top: 14px; right: 14px; bottom: 14px; width: min(420px, calc(100% - 28px)); display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,.18); border-radius: 24px; overflow: hidden; background: var(--glass-heavy); box-shadow: -18px 20px 70px rgba(0,0,0,.42); -webkit-backdrop-filter: blur(28px); backdrop-filter: blur(28px); transform: translateX(calc(100% + 34px)); transition: transform .4s cubic-bezier(.2,.8,.2,1); }
+    .panel.open { transform: none; }
+    .panel-head { display: grid; grid-template-columns: 1fr auto; gap: 14px; padding: 24px 24px 16px; border-bottom: 1px solid rgba(255,255,255,.12); }
+    .eyebrow { margin: 0 0 4px; color: var(--accent); font-size: 11px; font-weight: 600; letter-spacing: .14em; }
+    .panel h2 { font-family: var(--display); margin: 0; font-size: 28px; line-height: 1.2; }
+    .close { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.16); border-radius: 50%; background: rgba(255,255,255,.08); font-size: 22px; line-height: 1; }
+    .panel-body { flex: 1; overflow-y: auto; padding: 18px 24px 22px; }
+    .photo { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 16px; display: block; background: rgba(255,255,255,.06); }
+    .detail { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-top: 16px; }
+    .detail p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .price { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .row { display: flex; gap: 10px; margin-top: 18px; }
+    .add { flex: 1; border: 0; border-radius: 14px; background: var(--accent); color: var(--ink); padding: 13px; font-weight: 700; }
+    .official { flex: 1; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.22); border-radius: 14px; color: var(--paper); text-decoration: none; font-size: 14px; }
+    .tour-row { display: flex; gap: 10px; margin-top: 10px; }
+    .tour-row button { flex: 1; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; background: rgba(255,255,255,.05); padding: 11px; font-size: 13px; color: var(--muted); }
+    .cart-line { display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .cart-line img { width: 52px; height: 52px; object-fit: cover; border-radius: 12px; }
+    .cart-line h3 { margin: 0 0 3px; font-size: 14px; }
+    .cart-line p { margin: 0; color: var(--muted); font-size: 12px; }
+    .stepper { display: flex; align-items: center; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; }
+    .stepper button { width: 36px; height: 36px; border: 0; background: transparent; }
+    .stepper span { min-width: 20px; text-align: center; font-size: 13px; }
+    .empty { padding: 60px 10px; text-align: center; color: var(--muted); font-size: 13px; }
+    .empty strong { display: block; color: var(--paper); font-family: var(--display); font-size: 21px; margin-bottom: 6px; }
+    .panel-foot { padding: 16px 24px calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,.12); }
+    .summary { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 16px; font-weight: 600; }
+    .checkout { width: 100%; border: 0; border-radius: 14px; background: var(--accent); color: var(--ink); padding: 14px; font-weight: 700; }
+    .note { margin: 10px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
+
+    .toast { position: fixed; z-index: 30; left: 50%; top: max(76px, calc(env(safe-area-inset-top) + 66px)); transform: translate(-50%, -20px); opacity: 0; border-radius: 999px; padding: 10px 16px; font-size: 13px; white-space: nowrap; transition: transform .3s, opacity .3s; pointer-events: none; }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+    @media (max-width: 680px) {
+      .brand span, .cart-button > span:first-of-type { display: none; }
+      .cart-button { padding-left: 8px; }
+      .panel { inset: auto 8px max(8px, env(safe-area-inset-bottom)); width: auto; max-height: 82dvh; transform: translateY(calc(100% + 20px)); }
+      .photo { aspect-ratio: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+  </style>
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+  </script>
+</head>
+<body>
+  <div id="view"></div>
+
+  <header class="hud-top">
+    <div class="brand glass"><strong>OHANAE</strong><span id="roomLabel">ROOM A · TABLE FABRIC</span></div>
+    <div class="actions">
+      <button class="icon-button glass" id="stickToggle" aria-pressed="false" aria-label="조이스틱으로 걷기" title="조이스틱으로 걷기" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button class="cart-button glass" id="cartButton"><span>장바구니</span><span class="cart-count" id="cartCount">0</span></button>
+    </div>
+  </header>
+
+  <div class="hint glass" id="hint"></div>
+  <nav class="dock glass" aria-label="상품 둘러보기">
+    <button class="arrow" data-tour="-1" aria-label="이전 상품으로 걸어가기">‹</button>
+    <button class="label" data-tour="0"><b id="tourName">상품 둘러보기</b><span id="tourCount">눌러서 첫 상품으로</span></button>
+    <button class="arrow" data-tour="1" aria-label="다음 상품으로 걸어가기">›</button>
+  </nav>
+  <div class="tip glass" id="tip" hidden><b id="tipName"></b><span id="tipPrice"></span></div>
+  <div class="stick glass" id="stick" hidden><i id="stickKnob"></i></div>
+
+  <div class="intro" id="intro">
+    <div class="intro-card glass">
+      <small>3D SHOWROOM · 시제품</small>
+      <h1>OHANAE</h1>
+      <p>두 개의 방을 직접 걸어 다니며 상품을 둘러보세요.</p>
+      <div class="keys" id="keys"></div>
+      <button class="enter" id="enterButton" disabled>불러오는 중…</button>
+      <div class="loading" id="loading">상품 사진 0 / 11</div>
+    </div>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+  <aside class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle" inert>
+    <div class="panel-head">
+      <div><p class="eyebrow" id="eyebrow"></p><h2 id="panelTitle"></h2></div>
+      <button class="close" id="closeButton" aria-label="닫기">×</button>
+    </div>
+    <div class="panel-body" id="panelBody"></div>
+    <div class="panel-foot" id="panelFoot" hidden></div>
+  </aside>
+  <div class="toast glass" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    /* ───────── 상품 (2D 쇼룸과 같은 값 · 사진은 저장소의 products/ 를 쓴다) ───────── */
+    const PHOTO_DIR = '../';
+    const PRODUCTS = [
+      { id: 'o14', name: 'white lace tea coaster', spec: 'OHANAE · white lace', price: 9000, photo: 'products/white-lace-tea-coaster.webp', url: 'https://ohanae.kr/PRODUCT/?idx=14' },
+      { id: 'o9', name: 'white lace table mat', spec: 'OHANAE · white lace', price: 21000, photo: 'products/white-lace-table-mat.webp', url: 'https://ohanae.kr/PRODUCT/?idx=9' },
+      { id: 'o13', name: 'brown table mat', spec: 'OHANAE · brown fabric', price: 21000, photo: 'products/brown-table-mat.webp', url: 'https://ohanae.kr/PRODUCT/?idx=13' },
+      { id: 'o7', name: 'purple lace mat', spec: 'OHANAE · purple lace', price: 35000, photo: 'products/purple-lace-mat.webp', url: 'https://ohanae.kr/PRODUCT/?idx=7' },
+      { id: 'o15', name: '선물 포장', spec: 'OHANAE gift wrapping', price: 1000, photo: 'products/gift-wrap.webp', url: 'https://ohanae.kr/PRODUCT/?idx=15' },
+      { id: 'o11', name: 'two tuck lace shoulder bag', spec: 'OHANAE · purple lace', price: 79000, photo: 'products/two-tuck-lace-shoulder-bag.webp', url: 'https://ohanae.kr/PRODUCT/?idx=11' },
+      { id: 'o10', name: 'hanging tissue case', spec: 'OHANAE · white lace', price: 37000, photo: 'products/hanging-tissue-case.webp', url: 'https://ohanae.kr/PRODUCT/?idx=10' },
+      { id: 'o6', name: 'purple lace flower pouch', spec: 'OHANAE · purple flower lace', price: 38000, photo: 'products/purple-lace-flower-pouch.webp', url: 'https://ohanae.kr/PRODUCT/?idx=6' },
+      { id: 'o1', name: 'bold flower pouch', spec: 'OHANAE · white flower lace', price: 36000, photo: 'products/bold-flower-pouch.webp', url: 'https://ohanae.kr/PRODUCT/?idx=1' },
+      { id: 'o8', name: 'brown lace book cover', spec: 'OHANAE · brown lace', price: 31000, photo: 'products/brown-lace-book-cover.webp', url: 'https://ohanae.kr/PRODUCT/?idx=8' },
+      { id: 'o12', name: 'white lace lantern cover', spec: 'OHANAE · white flower lace', price: 34000, photo: 'products/white-lace-lantern-cover.webp', url: 'https://ohanae.kr/PRODUCT/?idx=12' }
+    ];
+    const getProduct = id => PRODUCTS.find(p => p.id === id);
+    const won = v => v.toLocaleString('ko-KR') + '원';
+    const $ = id => document.getElementById(id);
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const rad = THREE.MathUtils.degToRad, deg = THREE.MathUtils.radToDeg;
+
+    /* ───────── 공간 배치 (단위 m) ─────────
+       Room A: z 0 ~ 8, Room B: z -8 ~ 0, 폭 x -4 ~ 4. 두 방 사이 벽(z=0)에 문(|x| < 0.9). */
+    const W = 4, DEPTH = 8, H = 3.2, DOOR = 0.9, EYE = 1.6, R = 0.3;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    $('view').appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#1d150f');
+    scene.fog = new THREE.Fog('#2a1f16', 9, 22);
+    const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 60);
+    camera.rotation.order = 'YXZ';
+    camera.position.set(0, EYE, 7.2);
+
+    // 세로로 긴 화면에서는 좌우가 너무 좁게 보이지 않게 시야를 넓힌다. zoom 은 두 손가락 · 휠 확대.
+    let zoom = 1, zoomTarget = 1;
+    function baseFov() {
+      const aspect = innerWidth / innerHeight;
+      return aspect < 1 ? Math.min(95, deg(2 * Math.atan(Math.tan(rad(27)) / aspect))) : 70;
+    }
+    function applyFov() {
+      camera.fov = deg(2 * Math.atan(Math.tan(rad(baseFov() / 2)) / zoom));
+      camera.updateProjectionMatrix();
+    }
+    applyFov();
+
+    /* 캔버스로 만든 재질 */
+    function canvasTexture(w, h, draw, repeat) {
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      draw(c.getContext('2d'), w, h);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 4;
+      if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); }
+      return t;
+    }
+    const woodFloor = canvasTexture(512, 512, (g, w, h) => {
+      for (let i = 0; i < 8; i++) {
+        const y = i * h / 8, tone = 52 + (i * 37 % 18);
+        g.fillStyle = `hsl(28, 34%, ${tone - 18}%)`; g.fillRect(0, y, w, h / 8);
+        for (let k = 0; k < 40; k++) { g.strokeStyle = `rgba(40,22,10,${.05 + Math.random() * .08})`; g.beginPath(); const yy = y + Math.random() * h / 8; g.moveTo(0, yy); g.bezierCurveTo(w * .3, yy + 3, w * .6, yy - 3, w, yy + 1); g.stroke(); }
+        g.fillStyle = 'rgba(30,16,8,.35)'; g.fillRect(0, y, w, 2);
+        g.fillRect((i % 2 ? .3 : .7) * w, y, 2, h / 8);
+      }
+    }, [3, 6]);
+    const plaster = canvasTexture(256, 256, (g, w, h) => {
+      g.fillStyle = '#e9dfcf'; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 2600; i++) { g.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '120,96,70'},${Math.random() * .05})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+    }, [4, 2]);
+    const lace = color => canvasTexture(256, 256, (g, w, h) => {
+      g.fillStyle = color; g.fillRect(0, 0, w, h);
+      g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 2;
+      for (let y = 16; y < h; y += 32) for (let x = (y / 32 % 2) * 16 + 16; x < w; x += 32) {
+        g.beginPath(); for (let a = 0; a < 6; a++) { const t = a / 6 * Math.PI * 2; g.moveTo(x, y); g.lineTo(x + Math.cos(t) * 9, y + Math.sin(t) * 9); } g.stroke();
+        g.beginPath(); g.arc(x, y, 11, 0, Math.PI * 2); g.stroke();
+      }
+    }, [2, 1]);
+    function textTexture(lines, { w = 1024, h = 256, bg = '#5a3a26', fg = '#f6ead2', size = 92 } = {}) {
+      return canvasTexture(w, h, g => {
+        g.fillStyle = bg; g.fillRect(0, 0, w, h);
+        g.fillStyle = fg; g.textAlign = 'center'; g.textBaseline = 'middle';
+        lines.forEach((t, i) => { g.font = `${i ? 400 : 700} ${i ? size * .45 : size}px "Gowun Batang", serif`; g.fillText(t, w / 2, h / 2 + (i - (lines.length - 1) / 2) * size * .9); });
+      });
+    }
+
+    const mat = {
+      floor: new THREE.MeshStandardMaterial({ map: woodFloor, roughness: .7 }),
+      wall: new THREE.MeshStandardMaterial({ map: plaster, roughness: .95 }),
+      ceiling: new THREE.MeshStandardMaterial({ color: '#efe6d8', roughness: 1 }),
+      wood: new THREE.MeshStandardMaterial({ color: '#6b4630', roughness: .55 }),
+      woodDark: new THREE.MeshStandardMaterial({ color: '#4a2f1f', roughness: .6 }),
+      brass: new THREE.MeshStandardMaterial({ color: '#b8904a', metalness: .7, roughness: .35 }),
+      rug: new THREE.MeshStandardMaterial({ color: '#b89a6a', roughness: 1 })
+    };
+    const box = (w, h, d, m, x, y, z, shadow = true) => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+      mesh.position.set(x, y, z); mesh.castShadow = shadow; mesh.receiveShadow = true;
+      scene.add(mesh); return mesh;
+    };
+
+    /* 바닥 · 천장 · 벽 */
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, DEPTH * 2), mat.floor);
+    floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+    const ceil = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, DEPTH * 2), mat.ceiling);
+    ceil.rotation.x = Math.PI / 2; ceil.position.y = H; scene.add(ceil);
+    box(.2, H, DEPTH * 2, mat.wall, -W - .1, H / 2, 0, false);
+    box(.2, H, DEPTH * 2, mat.wall, W + .1, H / 2, 0, false);
+    box(W * 2, H, .2, mat.wall, 0, H / 2, DEPTH + .1, false);
+    box(W * 2, H, .2, mat.wall, 0, H / 2, -DEPTH - .1, false);
+    // 가운데 벽과 문
+    const sideW = W - DOOR;
+    box(sideW, H, .2, mat.wall, -(DOOR + sideW / 2), H / 2, 0);
+    box(sideW, H, .2, mat.wall, DOOR + sideW / 2, H / 2, 0);
+    box(DOOR * 2, H - 2.3, .2, mat.wall, 0, 2.3 + (H - 2.3) / 2, 0);
+    box(.12, 2.3, .3, mat.wood, -DOOR, 1.15, 0); box(.12, 2.3, .3, mat.wood, DOOR, 1.15, 0); box(DOOR * 2 + .12, .12, .3, mat.wood, 0, 2.3, 0);
+    // 걸레받이
+    [-W + .02, W - .02].forEach(x => box(.04, .12, DEPTH * 2, mat.woodDark, x, .06, 0, false));
+
+    // 안내판
+    const sign = (lines, x, y, z, ry, w = 1.6) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w / 4), new THREE.MeshStandardMaterial({ map: textTexture(lines), roughness: .8 }));
+      m.position.set(x, y, z); m.rotation.y = ry; scene.add(m); return m;
+    };
+    sign(['ROOM B', '가방 · 파우치 · 오브제'], 0, 2.72, .12, 0, 1.4);
+    sign(['ROOM A', '테이블 패브릭'], 0, 2.72, -.12, Math.PI, 1.4);
+    sign(['OHANAE', 'MY SWEET CAKE HOUSE'], 0, 2.2, DEPTH - .02, Math.PI, 2.2);
+
+    // 창 (Room A 왼쪽 벽, Room B 뒤 벽)
+    function windowAt(x, y, z, ry, w = 1.6, h = 1.4) {
+      const g = new THREE.Group();
+      g.add(new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: '#fff4dc' })));
+      const frame = new THREE.MeshStandardMaterial({ color: '#5a3a26' });
+      [[w + .12, .08, 0, h / 2], [w + .12, .08, 0, -h / 2], [.08, h, -w / 2, 0], [.08, h, w / 2, 0], [.05, h, 0, 0], [w, .05, 0, 0]].forEach(([bw, bh, bx, by]) => {
+        const b = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, .06), frame); b.position.set(bx, by, .03); g.add(b);
+      });
+      g.position.set(x, y, z); g.rotation.y = ry; scene.add(g);
+    }
+    windowAt(-W + .01, 1.7, 4.2, Math.PI / 2);
+    windowAt(2.2, 1.7, -DEPTH + .01, 0, 1.4, 1.2);
+
+    /* 조명 */
+    scene.add(new THREE.HemisphereLight('#fff1dc', '#5a3d28', .55));
+    const sun = new THREE.DirectionalLight('#ffe7c2', 1.4);
+    sun.position.set(-9, 6, 3); sun.target.position.set(0, 0, 2);
+    sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+    Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 30 });
+    scene.add(sun, sun.target);
+    function pendant(x, z, power = 9) {
+      const cord = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, .7), mat.woodDark); cord.position.set(x, H - .35, z); scene.add(cord);
+      const shade = new THREE.Mesh(new THREE.SphereGeometry(.26, 24, 16), new THREE.MeshStandardMaterial({ color: '#fff6e4', emissive: '#ffdca0', emissiveIntensity: 1.4 }));
+      shade.position.set(x, H - .85, z); scene.add(shade);
+      const light = new THREE.PointLight('#ffd9a0', power, 7, 1.6); light.position.set(x, H - 1.05, z); scene.add(light);
+    }
+    pendant(0, 3.6); pendant(0, -4); pendant(2.6, 5.4, 4); pendant(-2.6, -3.4, 4);
+
+    // 러그
+    const rug = (x, z, w, d) => { const r = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat.rug); r.rotation.x = -Math.PI / 2; r.position.set(x, .005, z); r.receiveShadow = true; scene.add(r); };
+    rug(0, 3.6, 3.6, 2.4); rug(0, -4, 3.2, 2.2);
+
+    /* 가구 · 부딪히는 상자(xz 평면) */
+    const obstacles = [];
+    function table(x, z, w, d, h = .76) {
+      box(w, .06, d, mat.wood, x, h - .03, z);
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => box(.07, h - .06, .07, mat.woodDark, x + sx * (w / 2 - .08), (h - .06) / 2, z + sz * (d / 2 - .08)));
+      obstacles.push({ x, z, w, d });
+      return h;
+    }
+    function cabinet(x, z, w, d, h) { box(w, h, d, mat.wood, x, h / 2, z); obstacles.push({ x, z, w, d }); return h; }
+    function runner(x, y, z, w, d, color) {
+      const r = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: lace(color), roughness: .9 }));
+      r.rotation.x = -Math.PI / 2; r.position.set(x, y + .003, z); r.receiveShadow = true; scene.add(r);
+    }
+
+    // Room A
+    const tA = table(0, 3.6, 2.8, 1.2);
+    runner(-.95, tA, 3.6, .7, 1.1, '#efe9de'); runner(.05, tA, 3.6, .7, 1.1, '#6e4b34'); runner(1.0, tA, 3.6, .7, 1.1, '#4b2a4a');
+    cabinet(3.35, 5.3, .9, 2.0, 1.0);
+    box(1.0, .05, 2.1, mat.woodDark, 3.35, 1.02, 5.3);
+    cabinet(-3.6, 1.6, .7, 1.8, .9);
+    // Room B
+    const tB = table(0, -4, 2.2, 1.1);
+    runner(-.5, tB, -4, .8, 1.0, '#4b2a4a'); runner(.5, tB, -4, .8, 1.0, '#efe9de');
+    table(3.2, -2.6, .9, 1.4, .8);
+    const lowB = cabinet(-.6, -7.45, 1.8, .7, .62);
+    // 행거 (Room B 왼쪽 벽)
+    box(.04, .04, 2.6, mat.brass, -3.62, 2.05, -3.6, false);
+    [-2.3, -4.9].forEach(z => box(.04, .5, .04, mat.brass, -3.75, 2.28, z, false));
+    // 화분
+    function plant(x, z) {
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(.22, .17, .45, 20), new THREE.MeshStandardMaterial({ color: '#e7e1d4', roughness: .8 }));
+      pot.position.set(x, .225, z); pot.castShadow = true; scene.add(pot);
+      const leafMat = new THREE.MeshStandardMaterial({ color: '#5f7a52', roughness: .8 });
+      for (let i = 0; i < 9; i++) {
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(.16, 10, 8), leafMat);
+        const a = i / 9 * Math.PI * 2; leaf.scale.set(.7, 1.5, .4);
+        leaf.position.set(x + Math.cos(a) * .18, .7 + (i % 3) * .14, z + Math.sin(a) * .18); leaf.rotation.set(Math.cos(a) * .6, a, Math.sin(a) * .6);
+        leaf.castShadow = true; scene.add(leaf);
+      }
+      obstacles.push({ x, z, w: .5, d: .5 });
+    }
+    plant(-3.4, 7.4); plant(3.4, -7.3); plant(3.4, 1.0);
+
+    /* 상품 판넬 */
+    const boards = {};
+    const loader = new THREE.TextureLoader();
+    let loaded = 0;
+    function display(id, x, y, z, ry, size = .5, { tilt = -.12, hang = false } = {}) {
+      const p = getProduct(id);
+      const g = new THREE.Group();
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(size + .05, size * 1.25 + .05, .03), mat.woodDark);
+      frame.castShadow = true; g.add(frame);
+      const face = new THREE.MeshStandardMaterial({ color: '#ddd', roughness: .6, emissive: '#ffffff', emissiveIntensity: 0 });
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(size, size * 1.25), face);
+      board.position.z = .016; g.add(board);
+      loader.load(PHOTO_DIR + p.photo, tex => {
+        tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+        const aspect = tex.image.height / tex.image.width;
+        board.geometry.dispose(); board.geometry = new THREE.PlaneGeometry(size, size * aspect);
+        frame.geometry.dispose(); frame.geometry = new THREE.BoxGeometry(size + .05, size * aspect + .05, .03);
+        if (!hang) g.position.y = y + (size * aspect) / 2 * Math.cos(tilt);
+        face.map = tex; face.color.set('#ffffff'); face.needsUpdate = true;
+        $('loading').textContent = `상품 사진 ${++loaded} / ${PRODUCTS.length}`;
+        if (loaded === PRODUCTS.length) ready();
+      }, undefined, () => { $('loading').textContent = `사진을 못 불러왔어요 — ${p.photo}`; });
+      if (hang) {
+        const cord = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .45), mat.brass);
+        cord.position.y = size * .62 + .22; g.add(cord);
+      } else {
+        // 받침대(이젤 다리)
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(.03, size * .9, .03), mat.woodDark);
+        leg.position.set(0, -size * .2, -.12); leg.rotation.x = .35; g.add(leg);
+      }
+      g.position.set(x, hang ? y : y + size * .62, z);
+      g.rotation.set(hang ? 0 : tilt, ry, 0, 'YXZ');
+      // 액자 어디를 눌러도 그 상품이다. nx · nz 는 판넬이 바라보는 방향
+      g.children.forEach(child => { child.userData.id = id; });
+      board.userData.nx = Math.sin(ry); board.userData.nz = Math.cos(ry);
+      scene.add(g);
+      boards[id] = board;
+    }
+    // Room A — 테이블 위, 입구 쪽(+z)을 본다
+    display('o14', -1.18, tA, 3.75, 0, .36);
+    display('o9', -.72, tA, 3.5, 0, .44);
+    display('o13', .05, tA, 3.5, 0, .5);
+    display('o7', 1.0, tA, 3.5, 0, .5);
+    display('o15', 3.3, 1.04, 5.3, -Math.PI / 2, .5);
+    // Room B
+    display('o11', -3.55, 1.25, -2.9, Math.PI / 2, .7, { hang: true });
+    display('o10', -3.55, 1.3, -4.3, Math.PI / 2, .6, { hang: true });
+    display('o6', -.5, tB, -3.9, 0, .5);
+    display('o1', .5, tB, -3.9, 0, .5);
+    display('o8', 3.15, .8, -2.6, -Math.PI / 2, .5);
+    display('o12', -.6, lowB, -7.35, 0, .48);
+    const lanternGlow = new THREE.PointLight('#ffe0a8', 3, 3, 2); lanternGlow.position.set(-.6, 1.4, -7); scene.add(lanternGlow);
+
+    // 바닥 표시: 걸어갈 자리(marker)와 마우스가 가리키는 자리(hoverRing). 눌림 판정에서는 뺀다.
+    function floorRing(inner, outer, opacity, dot) {
+      const g = new THREE.Group();
+      const m = new THREE.MeshBasicMaterial({ color: '#f1cf8a', transparent: true, opacity, depthWrite: false });
+      const ring = new THREE.Mesh(new THREE.RingGeometry(inner, outer, 48), m); g.add(ring);
+      if (dot) g.add(new THREE.Mesh(new THREE.CircleGeometry(dot, 24), m));
+      g.children.forEach(c => { c.raycast = () => {}; });
+      g.rotation.x = -Math.PI / 2; g.position.y = .02; g.visible = false;
+      scene.add(g); return g;
+    }
+    const marker = floorRing(.17, .23, .95, .06);
+    const hoverRing = floorRing(.15, .18, .5);
+
+    /* ───────── 부딪힘 · 길 찾기 ───────── */
+    function blocked(x, z) {
+      if (Math.abs(x) > W - R || Math.abs(z) > DEPTH - R) return true;
+      if (Math.abs(z) < .1 + R && Math.abs(x) > DOOR - R) return true;
+      return obstacles.some(o => Math.abs(x - o.x) < o.w / 2 + R && Math.abs(z - o.z) < o.d / 2 + R);
+    }
+    // 두 점 사이를 곧게 걸을 수 있는가
+    function clear(ax, az, bx, bz) {
+      const n = Math.ceil(Math.hypot(bx - ax, bz - az) / .08);
+      for (let i = 0; i <= n; i++) { const t = n ? i / n : 0; if (blocked(ax + (bx - ax) * t, az + (bz - az) * t)) return false; }
+      return true;
+    }
+    // 바닥을 0.2m 칸으로 나눠 걸을 수 있는 칸을 적어 둔다
+    const CS = .2, NX = Math.round(W * 2 / CS), NZ = Math.round(DEPTH * 2 / CS);
+    const cellX = i => -W + (i + .5) * CS, cellZ = j => -DEPTH + (j + .5) * CS;
+    const free = new Uint8Array(NX * NZ);
+    for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) free[j * NX + i] = blocked(cellX(i), cellZ(j)) ? 0 : 1;
+    function nearestFree(x, z) {
+      let best = null, bd = Infinity;
+      for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) {
+        if (!free[j * NX + i]) continue;
+        const d = (cellX(i) - x) ** 2 + (cellZ(j) - z) ** 2;
+        if (d < bd) { bd = d; best = { i: j * NX + i, x: cellX(i), z: cellZ(j) }; }
+      }
+      return best;
+    }
+    // A* 로 칸을 따라간 뒤, 곧게 갈 수 있는 구간은 펴서 꺾이는 점만 남긴다
+    function findPath(sx, sz, tx, tz) {
+      const s = nearestFree(sx, sz), t = nearestFree(tx, tz);
+      if (!s || !t) return null;
+      const end = blocked(tx, tz) ? [t.x, t.z] : [tx, tz];
+      if (clear(sx, sz, end[0], end[1])) return [[sx, sz], end];
+      const N = NX * NZ, cost = new Float32Array(N).fill(Infinity), from = new Int32Array(N).fill(-1), closed = new Uint8Array(N);
+      const ti = t.i % NX, tj = (t.i / NX) | 0;
+      const h = i => Math.hypot(i % NX - ti, ((i / NX) | 0) - tj);
+      const open = [s.i]; cost[s.i] = 0;
+      let found = s.i === t.i;
+      while (open.length && !found) {
+        let bi = 0, bf = Infinity;
+        for (let k = 0; k < open.length; k++) { const f = cost[open[k]] + h(open[k]); if (f < bf) { bf = f; bi = k; } }
+        const cur = open.splice(bi, 1)[0];
+        if (cur === t.i) { found = true; break; }
+        if (closed[cur]) continue;
+        closed[cur] = 1;
+        const ci = cur % NX, cj = (cur / NX) | 0;
+        for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+          if (!di && !dj) continue;
+          const ni = ci + di, nj = cj + dj;
+          if (ni < 0 || nj < 0 || ni >= NX || nj >= NZ) continue;
+          const n = nj * NX + ni;
+          if (!free[n] || closed[n]) continue;
+          if (di && dj && (!free[cj * NX + ni] || !free[nj * NX + ci])) continue;   // 모서리를 비껴 지나가지 않는다
+          const c = cost[cur] + (di && dj ? Math.SQRT2 : 1);
+          if (c < cost[n]) { cost[n] = c; from[n] = cur; open.push(n); }
+        }
+      }
+      if (!found) return null;
+      const cells = [];
+      for (let i = t.i; i !== -1; i = from[i]) cells.push(i);
+      cells.reverse();
+      const pts = [[sx, sz], ...cells.map(i => [cellX(i % NX), cellZ((i / NX) | 0)]), end];
+      const out = [pts[0]];
+      for (let i = 0; i < pts.length - 1;) {
+        let j = pts.length - 1;
+        while (j > i + 1 && !clear(pts[i][0], pts[i][1], pts[j][0], pts[j][1])) j--;
+        out.push(pts[j]); i = j;
+      }
+      return out;
+    }
+
+    /* ───────── 움직임 ───────── */
+    let yaw = 0, pitch = -.08;
+    // 주소 끝 #roomb 로 열면 Room B 문 앞에서 시작한다
+    if (location.hash === '#roomb') camera.position.set(0, EYE, -1.0);
+    camera.rotation.set(pitch, yaw, 0);
+    const keys = {};
+    const stick = { x: 0, y: 0 };
+    const isTouch = matchMedia('(pointer: coarse)').matches;
+    const turn = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(to - from));   // 가까운 쪽으로 도는 각
+    const yawToward = (dx, dz) => Math.atan2(-dx, -dz);
+
+    // 키보드 · 조이스틱으로 직접 걷기
+    function move(dt) {
+      let fx = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0) + -stick.y;
+      let sx = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0) + stick.x;
+      const len = Math.hypot(fx, sx);
+      if (len < .05) return false;
+      if (len > 1) { fx /= len; sx /= len; }
+      const speed = (keys.ShiftLeft || keys.ShiftRight ? 3.6 : 2.2) * dt;
+      const sin = Math.sin(yaw), cos = Math.cos(yaw);
+      const dx = (-sin * fx + cos * sx) * speed, dz = (-cos * fx - sin * sx) * speed;
+      const p = camera.position;
+      if (!blocked(p.x + dx, p.z)) p.x += dx;
+      if (!blocked(p.x, p.z + dz)) p.z += dz;
+      return true;
+    }
+
+    // 누른 자리까지 알아서 걷기
+    let walk = null;
+    const WALK_SPEED = 3.0;
+    function walkTo(x, z, { face = null, onArrive = null } = {}) {
+      const p = camera.position;
+      const pts = findPath(p.x, p.z, clamp(x, -W, W), clamp(z, -DEPTH, DEPTH));
+      if (!pts) return false;
+      const end = pts[pts.length - 1];
+      marker.position.set(end[0], .02, end[1]);
+      marker.visible = Math.hypot(end[0] - p.x, end[1] - p.z) > .3;
+      hoverRing.visible = false;
+      zoomTarget = 1;
+      walk = { pts, seg: 1, t: 0, face, onArrive, follow: true, arrived: false, settle: 0 };
+      dismissHint();
+      return true;
+    }
+    function cancelWalk() { walk = null; marker.visible = false; }
+    function stepWalk(dt) {
+      if (!walk) return false;
+      const p = camera.position, w = walk;
+      if (!w.arrived) {
+        let remaining = 0, px = p.x, pz = p.z;
+        for (let i = w.seg; i < w.pts.length; i++) { remaining += Math.hypot(w.pts[i][0] - px, w.pts[i][1] - pz); [px, pz] = w.pts[i]; }
+        w.t += dt;
+        let step = Math.min(WALK_SPEED, .8 + w.t * 6, .5 + remaining * 2.4) * dt;   // 천천히 출발해서 천천히 멈춘다
+        let dirX = 0, dirZ = 0;
+        while (step > 0 && w.seg < w.pts.length) {
+          const [tx, tz] = w.pts[w.seg], dx = tx - p.x, dz = tz - p.z, d = Math.hypot(dx, dz);
+          if (d > .001) { dirX = dx / d; dirZ = dz / d; }
+          if (d <= step) { p.x = tx; p.z = tz; step -= d; w.seg++; }
+          else { p.x += dirX * step; p.z += dirZ * step; step = 0; }
+        }
+        const nearEnd = w.face && remaining < 1.0;
+        if (nearEnd) yaw += turn(yaw, w.face.yaw) * Math.min(1, dt * 5);
+        else if (w.follow && (dirX || dirZ)) yaw += turn(yaw, yawToward(dirX, dirZ)) * Math.min(1, dt * 4);
+        if (w.face && remaining < 1.6) pitch += (w.face.pitch - pitch) * Math.min(1, dt * 3);
+        if (w.seg >= w.pts.length) w.arrived = true;
+      } else if (w.face && w.settle < .7 && (Math.abs(turn(yaw, w.face.yaw)) > .02 || Math.abs(w.face.pitch - pitch) > .02)) {
+        // 도착한 뒤 상품 쪽으로 마저 돌아본다
+        w.settle += dt;
+        yaw += turn(yaw, w.face.yaw) * Math.min(1, dt * 7);
+        pitch += (w.face.pitch - pitch) * Math.min(1, dt * 7);
+      } else {
+        const done = w.onArrive;
+        cancelWalk();
+        done?.();
+        return false;
+      }
+      camera.rotation.set(pitch, yaw, 0);
+      return !w.arrived;
+    }
+
+    // 상품 앞 보기 좋은 자리 — 판넬 앞 1.15m, 눈높이에서 판넬 가운데를 본다
+    const tmp = new THREE.Vector3();
+    function viewSpot(id) {
+      const board = boards[id], c = board.getWorldPosition(tmp);
+      let x = c.x + board.userData.nx * 1.15, z = c.z + board.userData.nz * 1.15;
+      if (blocked(x, z)) { const f = nearestFree(x, z); x = f.x; z = f.z; }
+      const dx = c.x - x, dz = c.z - z;
+      return { x, z, yaw: yawToward(dx, dz), pitch: clamp(Math.atan2(c.y - EYE, Math.hypot(dx, dz)), -.6, .3) };
+    }
+    let tour = -1;
+    function setTour(i) {
+      tour = i;
+      $('tourName').textContent = PRODUCTS[i].name;
+      $('tourCount').textContent = `${i + 1} / ${PRODUCTS.length} · ${won(PRODUCTS[i].price)}`;
+    }
+    function goToProduct(id) {
+      if (panelOpen()) closePanel();
+      setTour(PRODUCTS.findIndex(p => p.id === id));
+      const s = viewSpot(id);
+      if (!walkTo(s.x, s.z, { face: { yaw: s.yaw, pitch: s.pitch }, onArrive: () => openProduct(id) })) openProduct(id);
+    }
+    function tourStep(delta) {
+      const n = PRODUCTS.length, base = tour < 0 ? (delta > 0 ? -1 : 0) : tour;
+      goToProduct(PRODUCTS[(base + delta + n) % n].id);
+    }
+
+    /* ───────── 보기 · 누르기 ───────── */
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    function hitAt(clientX, clientY) {
+      ndc.set(clientX / innerWidth * 2 - 1, -(clientY / innerHeight) * 2 + 1);
+      raycaster.setFromCamera(ndc, camera);
+      return raycaster.intersectObjects(scene.children, true)[0] || null;
+    }
+    // 누름: 상품이면 다가가서 열고, 아니면 그 자리(가구 · 벽이면 그 앞)로 걸어간다
+    function tapAt(clientX, clientY) {
+      const hit = hitAt(clientX, clientY);
+      if (!hit) return;
+      if (hit.object.userData.id) return goToProduct(hit.object.userData.id);
+      if (hit.point.y > 2.4) return;
+      walkTo(hit.point.x, hit.point.z);
+    }
+
+    let hovered = null;
+    function setHover(id, x, y) {
+      if (hovered && hovered !== id) boards[hovered].material.emissiveIntensity = 0;
+      hovered = id;
+      if (id) {
+        boards[id].material.emissiveIntensity = .18;
+        const p = getProduct(id);
+        $('tipName').textContent = p.name; $('tipPrice').textContent = `${won(p.price)} · 눌러서 다가가기`;
+        $('tip').style.left = x + 'px'; $('tip').style.top = y + 'px'; $('tip').hidden = false;
+      } else $('tip').hidden = true;
+      $('view').classList.toggle('pointing', !!id);
+    }
+
+    // 끌면 잡은 곳이 손을 따라온다(거리뷰 방식). 확대해도 같은 느낌이 되게 시야각에 맞춘다.
+    function look(dx, dy) {
+      const k = rad(camera.fov) / innerHeight * 1.15;
+      yaw += dx * k; pitch = clamp(pitch + dy * k, -1.2, 1.2);
+      camera.rotation.set(pitch, yaw, 0);
+      if (walk) walk.follow = false;
+    }
+
+    const el = renderer.domElement;
+    // 마우스
+    let dragging = false, lastX = 0, lastY = 0, moved = 0;
+    el.addEventListener('mousedown', e => { if (e.button) return; dragging = true; lastX = e.clientX; lastY = e.clientY; moved = 0; $('view').classList.add('grabbing'); });
+    addEventListener('mousemove', e => {
+      if (dragging) {
+        const dx = e.clientX - lastX, dy = e.clientY - lastY;
+        moved += Math.abs(dx) + Math.abs(dy); lastX = e.clientX; lastY = e.clientY;
+        if (moved >= 6) { look(dx, dy); setHover(null); hoverRing.visible = false; }
+        return;
+      }
+      if (e.target !== el || panelOpen()) return;
+      const hit = hitAt(e.clientX, e.clientY);
+      setHover(hit?.object.userData.id || null, e.clientX, e.clientY);
+      const onFloor = hit && !hit.object.userData.id && hit.point.y < .05 && !blocked(hit.point.x, hit.point.z);
+      hoverRing.visible = !!onFloor && !walk;
+      if (onFloor) hoverRing.position.set(hit.point.x, .02, hit.point.z);
+    });
+    addEventListener('mouseup', e => {
+      if (dragging && moved < 6 && e.target === el) tapAt(e.clientX, e.clientY);
+      dragging = false; $('view').classList.remove('grabbing');
+    });
+    el.addEventListener('mouseleave', () => { setHover(null); hoverRing.visible = false; });
+    el.addEventListener('wheel', e => { zoomTarget = clamp(zoomTarget * (e.deltaY < 0 ? 1.12 : .89), 1, 2.5); e.preventDefault(); }, { passive: false });
+
+    // 터치: 한 손가락 끌기 = 둘러보기, 탭 = 걷기 · 고르기, 두 손가락 = 확대. 조이스틱은 켰을 때만.
+    let stickOn = false, stickId = null, stickOrigin = null, pinch = null;
+    const touches = new Map();
+    el.addEventListener('touchstart', e => {
+      for (const t of e.changedTouches) {
+        if (stickOn && stickId === null && t.clientX < innerWidth * .5 && t.clientY > innerHeight * .5) {
+          stickId = t.identifier; stickOrigin = [t.clientX, t.clientY];
+          const s = $('stick'); s.style.left = (t.clientX - 58) + 'px'; s.style.top = (t.clientY - 58) + 'px'; s.style.bottom = 'auto';
+          continue;
+        }
+        touches.set(t.identifier, { x: t.clientX, y: t.clientY, moved: 0 });
+        if (touches.size === 2) {
+          const [a, b] = [...touches.values()];
+          pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, zoom: zoomTarget };
+          a.moved = b.moved = 99;
+        }
+      }
+      e.preventDefault();
+    }, { passive: false });
+    el.addEventListener('touchmove', e => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === stickId) {
+          let dx = t.clientX - stickOrigin[0], dy = t.clientY - stickOrigin[1];
+          const d = Math.hypot(dx, dy), max = 46;
+          if (d > max) { dx *= max / d; dy *= max / d; }
+          stick.x = dx / max; stick.y = dy / max;
+          $('stickKnob').style.transform = `translate(${dx}px, ${dy}px)`;
+        } else if (touches.has(t.identifier)) {
+          const s = touches.get(t.identifier), dx = t.clientX - s.x, dy = t.clientY - s.y;
+          s.x = t.clientX; s.y = t.clientY; s.moved += Math.abs(dx) + Math.abs(dy);
+          if (!pinch && s.moved >= 10) look(dx, dy);
+        }
+      }
+      if (pinch && touches.size >= 2) {
+        const [a, b] = [...touches.values()];
+        zoomTarget = clamp(pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, 1, 2.5);
+      }
+      e.preventDefault();
+    }, { passive: false });
+    function touchEnd(e, cancelled) {
+      for (const t of e.changedTouches) {
+        if (t.identifier === stickId) {
+          stickId = null; stick.x = stick.y = 0; $('stickKnob').style.transform = '';
+          const s = $('stick'); s.style.left = ''; s.style.top = ''; s.style.bottom = '';
+        } else if (touches.has(t.identifier)) {
+          const s = touches.get(t.identifier);
+          touches.delete(t.identifier);
+          if (touches.size < 2) pinch = null;
+          if (!cancelled && s.moved < 10) tapAt(t.clientX, t.clientY);
+        }
+      }
+    }
+    el.addEventListener('touchend', e => touchEnd(e, false));
+    el.addEventListener('touchcancel', e => touchEnd(e, true));
+
+    addEventListener('keydown', e => {
+      if (panelOpen()) { if (e.key === 'Escape') closePanel(); return; }
+      if (e.target.closest?.('button, a')) return;
+      keys[e.code] = true;
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+    });
+    addEventListener('keyup', e => { keys[e.code] = false; });
+    addEventListener('blur', () => { for (const k in keys) keys[k] = false; dragging = false; });
+
+    /* ───────── 장바구니 · 상품 창 ───────── */
+    const STORAGE_KEY = 'ohanae-virtual-shop-cart';
+    let cart = {};
+    try { cart = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch (_) {}
+    const save = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cart)); } catch (_) {} updateCount(true); };
+    function updateCount(bump) {
+      $('cartCount').textContent = Object.values(cart).reduce((a, b) => a + b, 0);
+      if (bump) { const c = $('cartCount'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); }
+    }
+    let toastTimer;
+    function toast(msg) { $('toast').textContent = msg; $('toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2200); }
+    const panelOpen = () => $('panel').classList.contains('open');
+    function openPanel() {
+      for (const k in keys) keys[k] = false;
+      stick.x = stick.y = 0;
+      cancelWalk(); setHover(null); hoverRing.visible = false;
+      $('panel').inert = false; $('panel').classList.add('open'); $('scrim').classList.add('open');
+      setTimeout(() => $('closeButton').focus({ preventScroll: true }), 60);
+    }
+    function closePanel() { $('panel').classList.remove('open'); $('scrim').classList.remove('open'); $('panel').inert = true; }
+    function openProduct(id) {
+      const p = getProduct(id);
+      $('eyebrow').textContent = roomOf(camera.position.z);
+      $('panelTitle').textContent = p.name;
+      $('panelBody').innerHTML = `
+        <img class="photo" src="${PHOTO_DIR + p.photo}" alt="${p.name}">
+        <div class="detail"><div><p>${p.spec}</p></div><span class="price">${won(p.price)}</span></div>
+        <div class="row"><button class="add" data-add="${p.id}">장바구니에 담기</button><a class="official" href="${p.url}" target="_blank" rel="noopener">공식 상품 보기 ↗</a></div>
+        <div class="tour-row"><button data-tour="-1">‹ 이전 상품</button><button data-tour="1">다음 상품 ›</button></div>`;
+      $('panelBody').scrollTop = 0;
+      $('panelFoot').hidden = true;
+      openPanel();
+    }
+    function openCart() {
+      $('eyebrow').textContent = 'CHECKOUT';
+      $('panelTitle').textContent = '장바구니';
+      renderCart(); openPanel();
+    }
+    function renderCart() {
+      const ids = Object.keys(cart).filter(id => cart[id] > 0 && getProduct(id));
+      if (!ids.length) {
+        $('panelBody').innerHTML = '<div class="empty"><strong>아직 비어 있어요</strong>매장을 걸어 다니며 마음에 드는 물건을 눌러 보세요.</div>';
+        $('panelFoot').hidden = true; return;
+      }
+      $('panelBody').innerHTML = ids.map(id => { const p = getProduct(id); return `
+        <div class="cart-line"><img src="${PHOTO_DIR + p.photo}" alt=""><div><h3>${p.name}</h3><p>${won(p.price)}</p></div>
+        <div class="stepper"><button data-step="${id}" data-delta="-1" aria-label="${p.name} 하나 빼기">−</button><span>${cart[id]}</span><button data-step="${id}" data-delta="1" aria-label="${p.name} 하나 더하기">+</button></div></div>`; }).join('');
+      const total = ids.reduce((s, id) => s + getProduct(id).price * cart[id], 0);
+      $('panelFoot').hidden = false;
+      $('panelFoot').innerHTML = `<div class="summary"><span>합계</span><span>${won(total)}</span></div><button class="checkout" id="checkoutButton">오하나에 공식몰에서 주문하기</button><p class="note">공식몰에서 상품 옵션과 재고를 다시 확인해 주세요.</p>`;
+    }
+    document.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.add) { cart[b.dataset.add] = (cart[b.dataset.add] || 0) + 1; save(); toast(`${getProduct(b.dataset.add).name} · 담았어요`); }
+      if (b.dataset.step) { const q = (cart[b.dataset.step] || 0) + Number(b.dataset.delta); if (q <= 0) delete cart[b.dataset.step]; else cart[b.dataset.step] = q; save(); renderCart(); }
+      if (b.dataset.tour) { b.blur(); tourStep(Number(b.dataset.tour)); }
+      if (b.id === 'checkoutButton') window.open('https://ohanae.kr/PRODUCT', '_blank', 'noopener');
+    });
+    $('cartButton').onclick = openCart;
+    $('closeButton').onclick = closePanel;
+    $('scrim').onclick = closePanel;
+    updateCount(false);
+
+    /* ───────── 방 이름 · 안내 · 조이스틱 켜기 ───────── */
+    const roomOf = z => z >= 0 ? 'ROOM A · TABLE FABRIC' : 'ROOM B · FABRIC & OBJECT';
+    let lastRoom = '';
+    $('keys').innerHTML = isTouch
+      ? '<kbd>바닥 탭</kbd><span>그 자리로 걸어가기</span><kbd>화면 끌기</kbd><span>둘러보기</span><kbd>상품 탭</kbd><span>다가가서 보기</span><kbd>두 손가락 벌리기</kbd><span>확대</span>'
+      : '<kbd>바닥 클릭 · W A S D</kbd><span>걸어가기</span><kbd>마우스 끌기</kbd><span>둘러보기</span><kbd>상품 클릭</kbd><span>다가가서 보기</span><kbd>휠</kbd><span>확대</span>';
+    $('hint').textContent = isTouch ? '바닥을 탭하면 그 자리로 걸어가요' : '바닥을 클릭하면 그 자리로 걸어가요';
+    let hintTimer;
+    function dismissHint() { clearTimeout(hintTimer); $('hint').classList.add('gone'); }
+
+    const STICK_KEY = 'ohanae-3d-joystick';
+    function setStick(on) {
+      stickOn = on;
+      $('stick').hidden = !on;
+      $('stickToggle').setAttribute('aria-pressed', String(on));
+      if (!on) { stickId = null; stick.x = stick.y = 0; }
+      try { localStorage.setItem(STICK_KEY, on ? '1' : '0'); } catch (_) {}
+    }
+    if (isTouch) {
+      $('stickToggle').hidden = false;
+      let saved = '0';
+      try { saved = localStorage.getItem(STICK_KEY) || '0'; } catch (_) {}
+      setStick(saved === '1');
+      $('stickToggle').onclick = () => { setStick(!stickOn); toast(stickOn ? '조이스틱을 켰어요 · 왼쪽 아래를 누르고 밀기' : '조이스틱을 껐어요'); };
+    }
+
+    function ready() { $('enterButton').disabled = false; $('enterButton').textContent = '쇼룸으로 들어가기'; }
+    setTimeout(() => { if ($('enterButton').disabled) ready(); }, 6000);
+    $('enterButton').onclick = () => { $('intro').hidden = true; hintTimer = setTimeout(dismissHint, 8000); };
+
+    /* ───────── 그리기 ───────── */
+    const clock = new THREE.Clock();
+    let bob = 0, probe = { frames: 0, time: 0 };
+    renderer.setAnimationLoop(() => {
+      const raw = clock.getDelta(), dt = Math.min(raw, .1);
+      // 느린 기기에서는 한 번만 화질을 낮춘다(그림자를 끄고 해상도를 줄인다)
+      if (probe && $('intro').hidden && raw < 1) {
+        probe.frames++; probe.time += raw;
+        if (probe.frames === 45) {
+          if (probe.time / 45 > .045) { sun.castShadow = false; renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); }
+          probe = null;
+        }
+      }
+      let walking = false;
+      if (!panelOpen() && $('intro').hidden) {
+        if (move(dt)) { cancelWalk(); dismissHint(); walking = true; }
+        else walking = stepWalk(dt);
+      }
+      bob = walking ? bob + dt * 9 : bob * .9;
+      camera.position.y = EYE + Math.sin(bob) * .022;
+      if (Math.abs(zoom - zoomTarget) > .001) { zoom += (zoomTarget - zoom) * Math.min(1, dt * 10); applyFov(); }
+      if (marker.visible) marker.scale.setScalar(1 + Math.sin(clock.elapsedTime * 6) * .08);
+      const room = roomOf(camera.position.z);
+      if (room !== lastRoom) { if (lastRoom) toast(room.startsWith('ROOM A') ? 'Room A로 들어왔어요' : 'Room B로 들어왔어요'); $('roomLabel').textContent = room; lastRoom = room; }
+      renderer.render(scene, camera);
+    });
+    addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; applyFov(); renderer.setSize(innerWidth, innerHeight); });
+  </script>
+</body>
+</html>
