@@ -282,7 +282,7 @@
       "rot": -90,
       "size": 0.4,
       "model": "brown-lace-book-cover.glb",
-      "glow": 0.9,
+      "glow": 0.4,
       "float": 0.1
     },
     {
