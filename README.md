@@ -26,7 +26,7 @@ GitHub Pages에서 정적 사이트로 배포됩니다.
 방 · 가구 · 소품은 코드로 그리지 않고, Blender 에서 실제 재질로 만든 뒤 빛(햇빛 · 조명 · 벽에 번지는 간접광)을 미리 계산해 그림으로 구워 둡니다.
 쇼룸은 그 결과(`3d/assets/`)를 불러오기만 해서, 실시간 조명 계산이 없고 폰에서도 가볍습니다.
 
-- `3d/assets/room.glb` — 방의 모양과 재질 · `lm_*.jpg` — 구운 빛 · `env_*.hdr` — 방마다 찍은 360° 사진(반사용) · `sky.jpg` — 창밖 풍경
+- `3d/assets/room.glb` — 방의 모양과 재질 · `lm_*.jpg` — 구운 빛 · `env_*.hdr` — 방마다 찍은 360° 사진(반사용) · `view.jpg` — 창밖 풍경(광안리 해변과 광안대교)
 - `3d/blender/build_room.py` — 방을 짓고 굽는 스크립트. 가구 자리는 `space.js` 에서 뽑은 `blender/space.json` 을 따릅니다.
 
 방을 고쳐 다시 만들려면(Blender 5 이상, 15분쯤 걸립니다):
@@ -37,5 +37,7 @@ npx @gltf-transform/cli@4 meshopt 3d/assets/room.glb 3d/assets/room.glb    # 모
 ```
 
 원본 에셋은 `3d/blender/fetch_assets.py` 로 받고 `prepare_textures.py` 로 손질합니다. `QUALITY=draft` 를 앞에 붙이면 2분 안에 거친 결과가 나옵니다. 스크립트는 내려받아 둔 원본 에셋 폴더(`SHOWROOM_SRC`, 기본값은 스크립트 안에 있음)를 읽습니다.
+
+창밖 사진은 [Gwangalli Beach and Gwangan Bridge Busan](https://commons.wikimedia.org/wiki/File:Gwangalli_Beach_and_Gwangan_Bridge_Busan.jpg) (Masterhatch, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))을 크기만 줄여 씁니다. 쇼룸 첫 화면에도 출처를 적었습니다.
 
 재질과 소품은 모두 CC0(자유 사용)입니다 — [Poly Haven](https://polyhaven.com)의 재질 · 가구 · 화분 · 화병 · 등 · 하늘 사진, [ambientCG](https://ambientcg.com)의 대리석 · 트래버틴 · 러그.
