@@ -176,8 +176,8 @@
       "rot": 0,
       "size": 0.24,
       "model": "white-lace-tea-coaster.glb",
-      "lean": 14,
-      "glow": 0.2
+      "glow": 0.2,
+      "float": 0.1
     },
     {
       "id": "i2",
@@ -188,8 +188,8 @@
       "rot": 0,
       "size": 0.44,
       "model": "white-lace-table-mat.glb",
-      "lean": 14,
-      "glow": 0.2
+      "glow": 0.2,
+      "float": 0.1
     },
     {
       "id": "i3",
@@ -200,8 +200,8 @@
       "rot": 0,
       "size": 0.44,
       "model": "brown-table-mat.glb",
-      "lean": 14,
-      "glow": 0.9
+      "glow": 0.9,
+      "float": 0.1
     },
     {
       "id": "i4",
@@ -212,8 +212,8 @@
       "rot": 0,
       "size": 0.56,
       "model": "purple-lace-mat.glb",
-      "lean": 14,
-      "glow": 0.9
+      "glow": 0.9,
+      "float": 0.1
     },
     {
       "id": "i5",
@@ -282,8 +282,8 @@
       "rot": -90,
       "size": 0.4,
       "model": "brown-lace-book-cover.glb",
-      "lean": 12,
-      "glow": 0.9
+      "glow": 0.9,
+      "float": 0.1
     },
     {
       "id": "i11",

@@ -420,7 +420,7 @@
       }, undefined, settle);
     }
     function buildModel(it, p, base, ry, entry) {
-      // 놓는 방법 넷: 그냥 세워서 천천히 돌리기 / lean(도) 만큼 뒤로 기대 세우기(매트처럼 납작한 것) / hang 벽에 걸기 / cord 천장에서 줄로 내려 달기(등갓).
+      // 놓는 방법: 그냥 세워서 천천히 돌리기 / float(m) 만큼 공중에 띄워 돌리기 / lean(도) 만큼 뒤로 기대 세우기 / hang 벽에 걸기 / cord 천장에서 줄로 내려 달기(등갓).
       // 기대 세운 것과 벽에 건 것은 돌지 않는다. glow 를 주면 스스로 조금 빛난다
       const size = it.size || .4, hang = !!it.hang, cord = !hang && !!it.cord, lean = hang || cord ? 0 : rad(it.lean || 0), still = hang || lean > 0 || it.spin === false;
       const g = new THREE.Group(), pivot = new THREE.Group();
@@ -428,6 +428,7 @@
       scene.add(g); pickables.push(g);
       Object.assign(entry, { root: g, cy: hang || cord ? base : base + size / 2, pivot: still ? null : pivot, highlight: on => { pivot.scale.setScalar(on ? 1.06 : 1); } });
       pending++;
+      const lift = hang || cord || lean ? 0 : (it.float || 0), phase = entries.length * 1.7;
       const fallback = () => { scene.remove(g); entry.pivot = null; buildFrame({ ...it, size: Math.max(size, .4) }, p, base, ry, entry); settle(); };
       modelUrl(it.model || '').then(url => gltf.load(url, res => {
         // 가장 긴 변이 size 가 되게 줄이고, 바닥 가운데에 세운다
@@ -460,6 +461,7 @@
           entry.cy = base + h * Math.cos(lean) / 2;
         }
         if (!lean) pivot.add(m);
+        if (lift) { entry.lift = lift; entry.phase = phase; pivot.position.y = lift; entry.cy += lift; }   // 띄운 것은 살짝 오르내린다
         tagParts(g, p.id);
         settle();
       }, undefined, fallback), fallback);
@@ -1009,7 +1011,7 @@
       if (zooming) { zoom += (zoomTarget - zoom) * Math.min(1, dt * 10); applyFov(); }
       if (marker.visible) marker.scale.setScalar(1 + Math.sin(clock.elapsedTime * 6) * .08);
       let spinning = false;
-      for (const e of entries) if (e.pivot) { e.pivot.rotation.y += dt * .45; spinning = true; }   // 3D 모델은 천천히 돈다
+      for (const e of entries) if (e.pivot) { e.pivot.rotation.y += dt * .45; if (e.lift) e.pivot.position.y = e.lift + Math.sin(clock.elapsedTime * 1.2 + e.phase) * .012; spinning = true; }   // 3D 모델은 천천히 돈다
       const here = roomName(camera.position.z);
       if (here !== lastRoom) {
         if (lastRoom) { toast(here.startsWith('ROOM A') ? 'Room A로 들어왔어요' : 'Room B로 들어왔어요'); sfx.door(); }
