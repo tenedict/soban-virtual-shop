@@ -83,8 +83,6 @@
     .enter { width: 100%; border: 0; border-radius: 3px; background: var(--ink); color: var(--paper); padding: 14px; font-weight: 600; font-size: 14px; letter-spacing: .04em; }
     .enter:disabled { opacity: .45; }
     .loading { margin-top: 10px; font-size: 12px; color: var(--muted); }
-    .credit { margin: 18px 0 0; font-size: 10.5px; color: var(--muted); }
-    .credit a { color: inherit; }
 
     /* 상품 창 · 장바구니 */
     .scrim { position: fixed; inset: 0; z-index: 20; background: rgba(28, 27, 25, .28); opacity: 0; pointer-events: none; transition: opacity .3s; }
@@ -180,7 +178,6 @@
       <div class="keys" id="keys"></div>
       <button class="enter" id="enterButton" disabled>불러오는 중…</button>
       <div class="loading" id="loading">매장을 준비하고 있어요</div>
-      <p class="credit">창밖 사진: Masterhatch, <a href="https://commons.wikimedia.org/wiki/File:Gwangalli_Beach_and_Gwangan_Bridge_Busan.jpg" target="_blank" rel="noopener">Wikimedia Commons</a> · CC BY-SA 4.0</p>
     </div>
   </div>
 
@@ -289,31 +286,9 @@
          assets/room.glb        모양과 재질. 둘째 UV 가 구운 빛의 자리
          assets/lm_<묶음>.jpg    구운 빛(직접광 + 간접광). 1/LM_SCALE 로 줄여 담겨 있다
          assets/env_a · b.hdr   방마다 한가운데서 찍은 360° 사진 — 반사와, 굽지 않은 물건(상품 · 받침대 · 소품)의 조명
-         assets/view.jpg        창밖 풍경(광안리 해변과 광안대교)
+         assets/sky.jpg         창밖 풍경 — 3D 로 지은 광안리를 360° 로 찍은 그림(blender/build_view.py)
        그래서 쇼룸에는 실시간 조명도 그림자 계산도 없다. */
     const LM_SCALE = 3;
-    // 창밖 풍경은 사진 한 장을 창에서 40m 떨어진 곳에 둥글게 세운 것이다. 멀리 있어서 걸어 다녀도 거의 움직이지 않는다.
-    // horizon = 사진에서 수평선의 높이(위에서부터의 비율) — 수평선이 눈높이에 오게 세운다
-    const VIEW = { radius: 40, span: rad(84), aspect: 4624 / 2604, horizon: .455 };
-    function addView(tex, cx, cz, dir, flip) {
-      const h = VIEW.radius * VIEW.span / VIEW.aspect;
-      const t = tex.clone(); t.wrapS = THREE.RepeatWrapping; t.repeat.x = flip ? -1 : 1; t.needsUpdate = true;
-      const m = new THREE.Mesh(
-        new THREE.CylinderGeometry(VIEW.radius, VIEW.radius, h, 48, 1, true, dir - VIEW.span / 2, VIEW.span),
-        new THREE.MeshBasicMaterial({ map: t, side: THREE.BackSide, toneMapped: false }));
-      m.position.set(cx, EYE - h * (.5 - VIEW.horizon), cz); m.raycast = () => {};
-      scene.add(m);
-    }
-    // 사진 바깥으로 이어지는 하늘과 바다(사진에서 뽑은 색)
-    function seaSky() {
-      const t = canvasTexture(16, 256, (g, w, h) => {
-        const grad = g.createLinearGradient(0, 0, 0, h);
-        [[0, '#3f84cb'], [.3, '#5ea2e2'], [.497, '#a8cdea'], [.503, '#6c9fc6'], [.62, '#4f86b1'], [1, '#3b566a']].forEach(([at, c]) => grad.addColorStop(at, c));
-        g.fillStyle = grad; g.fillRect(0, 0, w, h);
-      });
-      t.mapping = THREE.EquirectangularReflectionMapping;
-      return t;
-    }
     const pickables = [];   // 누름 · 가리킴을 따지는 것: 방의 바닥 · 벽 · 가구와 놓인 상품(소품 · 간판은 뺀다)
     const texLoader = new THREE.TextureLoader();
     let room, envMaps;
@@ -323,7 +298,7 @@
       const [glb, lmShell, lmWood, lmFurn, hdrA, hdrB, skyTex] = await Promise.all([
         new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync('assets/room.glb', e => { if (e.total) $('loading').textContent = `매장을 불러오고 있어요 ${Math.round(e.loaded / e.total * 100)}%`; }),
         texLoader.loadAsync('assets/lm_shell.jpg'), texLoader.loadAsync('assets/lm_wood.jpg'), texLoader.loadAsync('assets/lm_furn.jpg'),
-        new RGBELoader().loadAsync('assets/env_a.hdr'), new RGBELoader().loadAsync('assets/env_b.hdr'), texLoader.loadAsync('assets/view.jpg')
+        new RGBELoader().loadAsync('assets/env_a.hdr'), new RGBELoader().loadAsync('assets/env_b.hdr'), texLoader.loadAsync('assets/sky.jpg')
       ]);
       room = glb.scene; scene.add(room);
       for (const name of ['shell', 'wood', 'furn']) { const g = room.getObjectByName(name); if (g) pickables.push(g); }
@@ -333,11 +308,9 @@
       envMaps = { A: pmrem.fromEquirectangular(hdrA).texture, B: pmrem.fromEquirectangular(hdrB).texture };
       hdrA.dispose(); hdrB.dispose();
       scene.environment = envMaps.A;
-      // 창밖 풍경: 광안리 해변과 광안대교
-      skyTex.colorSpace = THREE.SRGBColorSpace; skyTex.anisotropy = 8;
-      scene.background = seaSky();
-      addView(skyTex, -W, 4.2, -Math.PI / 2, true);      // Room A 왼쪽 창
-      addView(skyTex, 2.6, -DEPTH, Math.PI, false);      // Room B 안쪽 창(좌우를 뒤집어 다른 자리처럼)
+      // 창밖 풍경: Blender 로 지은 광안리(바다 · 백사장 · 광안대교)를 360° 로 찍은 그림. 아주 먼 풍경이라 배경으로 둔다
+      skyTex.mapping = THREE.EquirectangularReflectionMapping; skyTex.colorSpace = THREE.SRGBColorSpace;
+      scene.background = skyTex;
 
       // 구운 빛에 간접광이 이미 들어 있으니, 구운 면은 360° 사진에서 반사만 받는다
       const GROUPS = ['shell', 'wood', 'furn', 'decor', 'emit'];

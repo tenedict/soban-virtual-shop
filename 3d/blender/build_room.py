@@ -9,7 +9,7 @@
   env_a.hdr · env_b.hdr   방마다 한가운데서 찍은 360° 사진(반사 · 움직이는 물건의 조명용)
   preview_*.jpg   확인용 그림
 
-창밖 풍경(view.jpg)은 쇼룸이 따로 불러오는 사진이라 여기서 만들지 않는다. 굽는 빛은 정원 하늘 사진(HDRI)에서 온다.
+창밖 풍경(sky.jpg)은 build_view.py 가 따로 만든다. 굽는 빛은 정원 하늘 사진(HDRI)에서 온다.
 치수와 가구 자리는 space.json(= space.js 에서 뽑은 것)을 따른다. 좌표는 three.js 기준(x, y 위, z)으로 적고
 P() 로 Blender 좌표(x, -z, y)로 바꾼다. 재질 · 소품은 Poly Haven · ambientCG 의 CC0 에셋이다.
 """
