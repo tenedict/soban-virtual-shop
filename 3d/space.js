@@ -12,6 +12,12 @@ export const FURNITURE = [
   { id: 'lowB', kind: 'block', x: -.6, z: -7.45, w: 1.8, d: .7, h: .62, label: '낮은 수납장' }
 ];
 export const PLANTS = [[-3.4, 7.4], [3.4, -7.3], [3.4, 1.0]];
+// 걸어서 지나갈 수 없는 소품(라운지 의자 · 옆 탁자 · 바구니). 모양은 Blender 에서 만든 방(assets/room.glb)에 들어 있다
+export const DECOR_BLOCKS = [
+  { x: -2.75, z: 6.55, w: 1.0, d: 1.0, label: '라운지 의자' },
+  { x: -3.4, z: 5.55, w: .55, d: .55, label: '옆 탁자' },
+  { x: 3.35, z: -6.0, w: .5, d: .5, label: '바구니' }
+];
 
 // 바닥에 놓은 물건 밑에 저절로 생기는 받침대
 export const PLINTH = { w: .42, h: .9 };

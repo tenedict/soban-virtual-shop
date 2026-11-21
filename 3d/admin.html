@@ -130,7 +130,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script type="module">
-    import { W, DEPTH, DOOR, FURNITURE, PLANTS, furnitureAt, roomOf } from './space.js';
+    import { W, DEPTH, DOOR, FURNITURE, PLANTS, DECOR_BLOCKS, furnitureAt, roomOf } from './space.js';
     import { loadPublished, readDraft, writeDraft, clearDraft, putModel, deleteModel, listLocalModels } from './store.js';
 
     const $ = id => document.getElementById(id);
@@ -168,6 +168,7 @@
         s += `<text x="${mx(f.x)}" y="${mz(f.z) + f.d / 2 + .26}" font-size=".19" fill="#8a8882" text-anchor="middle">${esc(f.label)}</text>`;
       }
       for (const [x, z] of PLANTS) s += `<circle cx="${mx(x)}" cy="${mz(z)}" r=".24" fill="#dfe8d8" stroke="#9db08f" stroke-width=".03"/>`;
+      for (const o of DECOR_BLOCKS) s += `<rect x="${mx(o.x) - o.w / 2}" y="${mz(o.z) - o.d / 2}" width="${o.w}" height="${o.d}" rx=".08" fill="#efe6d6" stroke="#c9b99c" stroke-width=".03"/><text x="${mx(o.x)}" y="${mz(o.z) + o.d / 2 + .24}" font-size=".17" fill="#8a8882" text-anchor="middle">${esc(o.label)}</text>`;
       for (const it of layout.items) {
         const p = product(it.product), a = (it.rot || 0) * Math.PI / 180, cx = mx(it.x), cy = mz(it.z);
         s += `<g class="item ${it.type === 'model' ? 'model' : ''} ${it.id === selected ? 'on' : ''}" data-item="${it.id}">

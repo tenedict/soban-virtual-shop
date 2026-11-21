@@ -7,7 +7,7 @@
   <title>OHANAE 3D 쇼룸 (시제품)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Zen+Antique&display=swap">
   <style>
     /* 시제품: 1인칭으로 매장 두 방을 걸어 다니며 상품을 누른다.
        조작은 한 손 기준이다 — 바닥을 누르면 그 자리로 걸어가고, 끌면 둘러보고, 상품을 누르면 다가가서 연다.
@@ -34,8 +34,11 @@
 
     /* 위: 가게 이름 줄 */
     .hud-top { position: fixed; z-index: 5; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--paper); border-bottom: 1px solid var(--line); padding: max(10px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) 10px max(18px, env(safe-area-inset-left)); }
-    .brand { display: flex; align-items: baseline; gap: 14px; min-width: 0; }
-    .brand strong { font-family: var(--display); font-size: 21px; letter-spacing: .16em; }
+    .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .logo { display: block; height: 34px; width: auto; }
+    .intro-card .logo { height: 68px; margin: 0 auto 14px; }
+    .shop-link { font-size: 12px; color: var(--muted); text-decoration: none; letter-spacing: .04em; white-space: nowrap; }
+    .shop-link:hover { color: var(--ink); }
     .brand span { font-size: 11px; color: var(--muted); letter-spacing: .12em; white-space: nowrap; }
     .actions { display: flex; align-items: center; gap: 10px; }
     .cart-button { display: flex; align-items: center; gap: 8px; border: 0; background: none; padding: 6px 2px; font-size: 13px; }
@@ -45,6 +48,9 @@
     .icon-button { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 3px; background: none; display: grid; place-items: center; padding: 0; }
     .icon-button svg { width: 18px; height: 18px; }
     .icon-button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+    #soundToggle[aria-pressed="true"] { background: none; color: var(--ink); border-color: var(--line); }
+    #soundToggle[aria-pressed="true"] .mute, #soundToggle[aria-pressed="false"] .wave { display: none; }
+    #soundToggle[aria-pressed="false"] { color: var(--muted); }
     .draft-flag { position: fixed; z-index: 5; top: calc(max(10px, env(safe-area-inset-top)) + 56px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--paper); border-radius: 3px; padding: 6px 12px; font-size: 12px; white-space: nowrap; }
     .draft-flag a { color: var(--paper); }
 
@@ -71,8 +77,7 @@
     .intro { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 24px; background: rgba(236, 229, 217, .9); }
     .intro-card { max-width: 400px; width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 34px 28px 26px; text-align: center; }
     .intro-card small { color: var(--muted); font-size: 11px; letter-spacing: .18em; }
-    .intro-card h1 { font-family: var(--display); font-size: 32px; margin: 8px 0 6px; letter-spacing: .14em; }
-    .intro-card p { margin: 0 0 22px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .intro-card p { margin: 10px 0 22px; color: var(--muted); font-size: 14px; line-height: 1.6; }
     .keys { display: grid; grid-template-columns: auto 1fr; gap: 9px 14px; text-align: left; font-size: 13px; margin: 0 auto 24px; max-width: 290px; }
     .keys kbd { font-family: var(--body); font-size: 12px; border: 1px solid var(--line); border-radius: 3px; padding: 2px 7px; background: var(--soft); white-space: nowrap; justify-self: start; }
     .enter { width: 100%; border: 0; border-radius: 3px; background: var(--ink); color: var(--paper); padding: 14px; font-weight: 600; font-size: 14px; letter-spacing: .04em; }
@@ -94,7 +99,7 @@
     .detail p { margin: 0; color: var(--muted); font-size: 13px; }
     .price { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .row { display: flex; gap: 8px; margin-top: 18px; }
-    .add { flex: 1; border: 0; border-radius: 3px; background: var(--ink); color: var(--paper); padding: 13px; font-weight: 600; font-size: 14px; }
+    .add { flex: 1; border: 1px solid var(--ink); border-radius: 3px; background: none; color: var(--ink); padding: 13px; font-weight: 600; font-size: 14px; }
     .official { flex: 1; display: grid; place-items: center; border: 1px solid var(--ink); border-radius: 3px; color: var(--ink); text-decoration: none; font-size: 13px; }
     .tour-row { display: flex; gap: 8px; margin-top: 8px; }
     .tour-row button { flex: 1; border: 1px solid var(--line); border-radius: 3px; background: none; padding: 11px; font-size: 13px; color: var(--muted); }
@@ -110,13 +115,22 @@
     .panel-foot { padding: 16px 24px calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
     .summary { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
     .checkout { width: 100%; border: 0; border-radius: 3px; background: var(--ink); color: var(--paper); padding: 14px; font-weight: 600; }
-    .note { margin: 10px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
+    .note { margin: 10px 0 0; color: var(--muted); font-size: 11px; text-align: center; line-height: 1.5; }
+    .desc-list { margin: 16px 0 0; padding: 0 0 0 18px; font-size: 13px; line-height: 1.65; color: #45423d; }
+    .desc-list li { margin-bottom: 4px; }
+    .story { margin: 14px 0 0; padding-left: 12px; border-left: 2px solid var(--line); font-family: var(--display); font-size: 13.5px; line-height: 1.7; color: var(--muted); }
+    .ship { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+    .buy { flex: 1.3; display: grid; place-items: center; border-radius: 3px; background: var(--ink); color: var(--paper); text-decoration: none; padding: 13px; font-weight: 600; font-size: 14px; }
+    .sum-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .cart-line h3 a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); }
+    a.checkout { display: block; text-align: center; text-decoration: none; }
 
     .toast { position: fixed; z-index: 30; left: 50%; top: calc(max(10px, env(safe-area-inset-top)) + 58px); transform: translate(-50%, -12px); opacity: 0; background: var(--ink); color: var(--paper); border-radius: 3px; padding: 9px 14px; font-size: 13px; white-space: nowrap; transition: transform .3s, opacity .3s; pointer-events: none; }
     .toast.show { transform: translate(-50%, 0); opacity: 1; }
 
     @media (max-width: 680px) {
-      .brand span, .cart-button > span:first-of-type { display: none; }
+      .brand span, .cart-button > span:first-of-type, .shop-link { display: none; }
+      .logo { height: 30px; }
       .panel { top: auto; left: 0; width: 100%; max-height: 82dvh; border-left: 0; border-top: 1px solid var(--line); border-radius: 12px 12px 0 0; box-shadow: 0 -12px 40px rgba(28, 27, 25, .14); transform: translateY(105%); padding-top: 0; }
       .photo { aspect-ratio: 1; }
     }
@@ -133,8 +147,12 @@
   <div id="view"></div>
 
   <header class="hud-top">
-    <div class="brand"><strong>OHANAE</strong><span id="roomLabel">ROOM A · TABLE FABRIC</span></div>
+    <div class="brand"><img class="logo" src="assets/logo.png" alt="おはなえ OHANAE" width="85" height="34"><span id="roomLabel">ROOM A · TABLE FABRIC</span></div>
     <div class="actions">
+      <a class="shop-link" href="https://ohanae.kr" target="_blank" rel="noopener">ohanae.kr ↗</a>
+      <button class="icon-button" id="soundToggle" aria-pressed="true" aria-label="소리 켜고 끄기" title="소리">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"/><path class="wave" d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.6 7.6 0 0 1 0 11"/><path class="mute" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+      </button>
       <button class="icon-button" id="stickToggle" aria-pressed="false" aria-label="조이스틱으로 걷기" title="조이스틱으로 걷기" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/></svg>
       </button>
@@ -154,8 +172,8 @@
 
   <div class="intro" id="intro">
     <div class="intro-card">
-      <small>3D SHOWROOM · 시제품</small>
-      <h1>OHANAE</h1>
+      <img class="logo" src="assets/logo.png" alt="おはなえ OHANAE" width="170" height="68">
+      <small>MY SWEET CAKE HOUSE · 3D SHOWROOM</small>
       <p>두 개의 방을 직접 걸어 다니며 상품을 둘러보세요.</p>
       <div class="keys" id="keys"></div>
       <button class="enter" id="enterButton" disabled>불러오는 중…</button>
@@ -177,8 +195,9 @@
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-    import { W, DEPTH, H, DOOR, FURNITURE, PLANTS, PLINTH, furnitureAt } from './space.js';
+    import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+    import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+    import { W, DEPTH, H, DOOR, FURNITURE, PLANTS, PLINTH, DECOR_BLOCKS, furnitureAt } from './space.js';
     import { loadLayout, modelUrl } from './store.js';
 
     const $ = id => document.getElementById(id);
@@ -196,25 +215,23 @@
     const PRODUCTS = layout.products;
     const getProduct = id => PRODUCTS.find(p => p.id === id);
     // 안내판 글씨에 쓸 글꼴을 잠깐 기다린다
-    await Promise.race([document.fonts.load('700 40px "Gowun Batang"'), new Promise(r => setTimeout(r, 1500))]);
+    await Promise.race([Promise.all([document.fonts.load('700 40px "Gowun Batang"'), document.fonts.load('40px "Zen Antique"', 'おはなえ')]), new Promise(r => setTimeout(r, 1800))]);
+    // 가게 정보: 구매는 오하나에 사이트에서 한다
+    const SHOP = { url: 'https://ohanae.kr', products: 'https://ohanae.kr/PRODUCT', shipping: 3000, freeShippingOver: 80000, ...(layout.shop || {}) };
+    const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
     const EYE = 1.6, R = 0.3;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.setSize(innerWidth, innerHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
     $('view').appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#ece5d9');
-    scene.fog = new THREE.Fog('#ece5d9', 14, 34);
-    // 대리석 · 황동에 비치는 은은한 실내 반사
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
 
     const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 60);
     camera.rotation.order = 'YXZ';
@@ -232,7 +249,7 @@
     }
     applyFov();
 
-    /* 캔버스로 만든 재질 — 따뜻한 대리석 바닥, 트래버틴, 오크, 석회 미장 */
+    /* 캔버스로 만든 재질 — 테이블 깔개, 안내판 글씨, 물건 밑 그림자에만 쓴다 */
     function canvasTexture(w, h, draw, repeat) {
       const c = document.createElement('canvas'); c.width = w; c.height = h;
       draw(c.getContext('2d'), w, h);
@@ -242,77 +259,6 @@
       if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); }
       return t;
     }
-    const rnd = (a, b) => a + Math.random() * (b - a);
-    // 아이보리 대리석: 옅은 구름결 위에 따뜻한 회색 결. tiles 를 주면 그 수만큼 줄눈을 긋는다.
-    function marble(size, { tiles = 0, veins = 9, repeat } = {}) {
-      return canvasTexture(size, size, (g, w, h) => {
-        g.fillStyle = '#eee8dd'; g.fillRect(0, 0, w, h);
-        for (let i = 0; i < 70; i++) {
-          const x = rnd(0, w), y = rnd(0, h), r = w * rnd(.04, .16), tone = rnd(190, 225) | 0;
-          const grad = g.createRadialGradient(x, y, 0, x, y, r);
-          grad.addColorStop(0, `rgba(${tone},${tone - 6},${tone - 16},.12)`); grad.addColorStop(1, 'rgba(255,255,255,0)');
-          g.fillStyle = grad; g.fillRect(x - r, y - r, r * 2, r * 2);
-        }
-        g.lineCap = 'round';
-        for (let v = 0; v < veins; v++) {
-          let x = rnd(0, w), y = rnd(0, h), a = rnd(0, Math.PI * 2);
-          const bold = v < veins / 3;
-          for (let s = 0; s < 160; s++) {
-            const nx = x + Math.cos(a) * w * .009, ny = y + Math.sin(a) * w * .009;
-            if (bold) { g.strokeStyle = 'rgba(150,134,116,.07)'; g.lineWidth = w * .009; g.beginPath(); g.moveTo(x, y); g.lineTo(nx, ny); g.stroke(); }
-            g.strokeStyle = `rgba(118,104,90,${bold ? .34 : .16})`; g.lineWidth = (bold ? w * .0022 : w * .001) * rnd(.5, 1.5);
-            g.beginPath(); g.moveTo(x, y); g.lineTo(nx, ny); g.stroke();
-            x = nx; y = ny; a += rnd(-.28, .28);
-            if (x < 0 || y < 0 || x > w || y > h) break;
-          }
-        }
-        if (tiles) {
-          g.strokeStyle = 'rgba(150,138,122,.6)'; g.lineWidth = Math.max(1.5, w * .002);
-          for (let i = 0; i <= tiles; i++) { const p = i * w / tiles; g.beginPath(); g.moveTo(p, 0); g.lineTo(p, h); g.moveTo(0, p); g.lineTo(w, p); g.stroke(); }
-        }
-      }, repeat);
-    }
-    // 트래버틴: 가로로 흐르는 띠와 작은 구멍
-    const travertine = canvasTexture(512, 512, (g, w, h) => {
-      g.fillStyle = '#d8cab3'; g.fillRect(0, 0, w, h);
-      for (let i = 0; i < 46; i++) {
-        const y = rnd(0, h), t = rnd(6, 34), light = Math.random() < .5;
-        g.strokeStyle = light ? `rgba(240,231,214,${rnd(.08, .2)})` : `rgba(160,138,108,${rnd(.04, .12)})`; g.lineWidth = t;
-        g.beginPath(); g.moveTo(-10, y); g.bezierCurveTo(w * .3, y + rnd(-8, 8), w * .7, y + rnd(-8, 8), w + 10, y + rnd(-6, 6)); g.stroke();
-      }
-      for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(104,84,62,${rnd(.1, .3)})`; g.beginPath(); g.ellipse(rnd(0, w), rnd(0, h), rnd(1.5, 7), rnd(.6, 1.8), 0, 0, Math.PI * 2); g.fill(); }
-    }, [1, 1]);
-    // 오크 나뭇결
-    function woodGrain(g, x0, w, h, n) {
-      for (let i = 0; i < n; i++) {
-        const x = x0 + rnd(0, w), light = Math.random() < .45;
-        g.strokeStyle = light ? `rgba(232,208,170,${rnd(.08, .22)})` : `rgba(118,84,48,${rnd(.06, .2)})`; g.lineWidth = rnd(.6, 2.6);
-        g.beginPath(); g.moveTo(x, -5); g.bezierCurveTo(x + rnd(-5, 5), h * .33, x + rnd(-5, 5), h * .66, x + rnd(-4, 4), h + 5); g.stroke();
-      }
-    }
-    const oak = canvasTexture(512, 512, (g, w, h) => { g.fillStyle = '#c4a073'; g.fillRect(0, 0, w, h); woodGrain(g, 0, w, h, 420); }, [1, 1]);
-    // 세로 살 벽(템바보드): 살마다 가운데가 밝고 틈이 어둡다. 512px = 살 8개 = 0.5m
-    const slats = canvasTexture(512, 512, (g, w, h) => {
-      const n = 8, sw = w / n;
-      g.fillStyle = '#b8935f'; g.fillRect(0, 0, w, h);
-      woodGrain(g, 0, w, h, 380);
-      for (let i = 0; i < n; i++) {
-        const grad = g.createLinearGradient(i * sw, 0, (i + 1) * sw, 0);
-        grad.addColorStop(0, 'rgba(48,32,18,.85)'); grad.addColorStop(.1, 'rgba(70,48,26,.35)'); grad.addColorStop(.3, 'rgba(255,236,200,.1)');
-        grad.addColorStop(.62, 'rgba(255,236,200,.04)'); grad.addColorStop(.9, 'rgba(70,48,26,.3)'); grad.addColorStop(1, 'rgba(48,32,18,.85)');
-        g.fillStyle = grad; g.fillRect(i * sw, 0, sw, h);
-      }
-    });
-    // 석회 미장 벽: 크게 얼룩진 따뜻한 회백색
-    const limewash = canvasTexture(512, 512, (g, w, h) => {
-      g.fillStyle = '#e6ddcf'; g.fillRect(0, 0, w, h);
-      for (let i = 0; i < 150; i++) {
-        const x = rnd(0, w), y = rnd(0, h), r = rnd(30, 130), light = Math.random() < .55;
-        const grad = g.createRadialGradient(x, y, 0, x, y, r);
-        grad.addColorStop(0, light ? 'rgba(250,244,234,.14)' : 'rgba(176,158,134,.1)'); grad.addColorStop(1, 'rgba(230,221,207,0)');
-        g.fillStyle = grad; g.fillRect(x - r, y - r, r * 2, r * 2);
-      }
-    }, [3, 1.5]);
     const lace = color => canvasTexture(256, 256, (g, w, h) => {
       g.fillStyle = color; g.fillRect(0, 0, w, h);
       g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 2;
@@ -322,156 +268,114 @@
       }
     }, [2, 1]);
     // bg 를 비우면 글씨만 있는 투명한 판이 된다
-    function textTexture(lines, { w = 1024, h = 256, bg = null, fg = '#f6efe2', size = 92 } = {}) {
+    function textTexture(lines, { w = 1024, h = 256, bg = null, fg = '#f6efe2', size = 92, font = '"Gowun Batang", serif' } = {}) {
       return canvasTexture(w, h, g => {
         if (bg) { g.fillStyle = bg; g.fillRect(0, 0, w, h); }
         g.fillStyle = fg; g.textAlign = 'center'; g.textBaseline = 'middle';
-        lines.forEach((t, i) => { g.font = `${i ? 400 : 700} ${i ? size * .45 : size}px "Gowun Batang", serif`; g.fillText(t, w / 2, h / 2 + (i - (lines.length - 1) / 2) * size * .9); });
+        lines.forEach((t, i) => { g.font = i ? `400 ${size * .4}px "Gowun Batang", serif` : `${font.includes('Zen') ? 400 : 700} ${size}px ${font}`; g.fillText(t, w / 2, h / 2 + (i - (lines.length - 1) / 2) * size * .9); });
       });
     }
-    // 간접 조명이 벽 · 천장에 번지는 빛
-    const glowMap = canvasTexture(8, 128, (g, w, h) => {
-      const grad = g.createLinearGradient(0, h, 0, 0);
-      grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(.35, 'rgba(255,255,255,.35)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+    const blobMap = canvasTexture(128, 128, (g, w, h) => {
+      const grad = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+      grad.addColorStop(0, 'rgba(0,0,0,.42)'); grad.addColorStop(.55, 'rgba(0,0,0,.16)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
       g.fillStyle = grad; g.fillRect(0, 0, w, h);
     });
 
+    /* ───────── 방 불러오기 ─────────
+       방 · 가구 · 소품은 Blender 에서 실제 재질로 만들고 빛을 미리 계산해 구운 것이다(만드는 법: blender/build_room.py).
+         assets/room.glb        모양과 재질. 둘째 UV 가 구운 빛의 자리
+         assets/lm_<묶음>.jpg    구운 빛(직접광 + 간접광). 1/LM_SCALE 로 줄여 담겨 있다
+         assets/env_a · b.hdr   방마다 한가운데서 찍은 360° 사진 — 반사와, 굽지 않은 물건(상품 · 받침대 · 소품)의 조명
+         assets/sky.jpg         창밖 풍경
+       그래서 쇼룸에는 실시간 조명도 그림자 계산도 없다. */
+    const LM_SCALE = 3;
+    const pickables = [];   // 누름 · 가리킴을 따지는 것: 방의 바닥 · 벽 · 가구와 놓인 상품(소품 · 간판은 뺀다)
+    const texLoader = new THREE.TextureLoader();
+    let room, envMaps;
+    const lib = {};
+    try {
+      $('loading').textContent = '매장을 불러오고 있어요';
+      const [glb, lmShell, lmWood, lmFurn, hdrA, hdrB, skyTex] = await Promise.all([
+        new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync('assets/room.glb', e => { if (e.total) $('loading').textContent = `매장을 불러오고 있어요 ${Math.round(e.loaded / e.total * 100)}%`; }),
+        texLoader.loadAsync('assets/lm_shell.jpg'), texLoader.loadAsync('assets/lm_wood.jpg'), texLoader.loadAsync('assets/lm_furn.jpg'),
+        new RGBELoader().loadAsync('assets/env_a.hdr'), new RGBELoader().loadAsync('assets/env_b.hdr'), texLoader.loadAsync('assets/sky.jpg')
+      ]);
+      room = glb.scene; scene.add(room);
+      for (const name of ['shell', 'wood', 'furn']) { const g = room.getObjectByName(name); if (g) pickables.push(g); }
+      const lightmaps = { shell: lmShell, wood: lmWood, furn: lmFurn };
+      for (const t of Object.values(lightmaps)) { t.flipY = false; t.channel = 1; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; }
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      envMaps = { A: pmrem.fromEquirectangular(hdrA).texture, B: pmrem.fromEquirectangular(hdrB).texture };
+      hdrA.dispose(); hdrB.dispose();
+      scene.environment = envMaps.A;
+      skyTex.mapping = THREE.EquirectangularReflectionMapping; skyTex.colorSpace = THREE.SRGBColorSpace;
+      scene.background = skyTex;
+
+      // 구운 빛에 간접광이 이미 들어 있으니, 구운 면은 360° 사진에서 반사만 받는다
+      const GROUPS = ['shell', 'wood', 'furn', 'decor', 'emit'];
+      const groupOf = o => { for (let n = o; n; n = n.parent) if (GROUPS.includes(n.name)) return n.name; return null; };
+      const reflectionOnly = THREE.ShaderChunk.lights_fragment_maps.replace('iblIrradiance += getIBLIrradiance( geometryNormal );', '');
+      room.traverse(o => {
+        if (!o.isMesh) return;
+        lib[o.material.name] ??= o.material;
+        const lm = lightmaps[groupOf(o)];
+        if (!lm || !o.geometry.attributes.uv1) return;
+        const m = o.material.clone();
+        m.lightMap = lm; m.lightMapIntensity = LM_SCALE * Math.PI;
+        m.onBeforeCompile = shader => { shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_maps>', reflectionOnly); };
+        o.material = m;
+      });
+    } catch (error) { $('loading').textContent = '매장을 불러오지 못했어요. 새로 고쳐 보세요.'; throw error; }
+
+    // 굽지 않은 것(받침대 · 액자)에 쓰는 재질 — 방과 같은 트래버틴 · 오크 · 철
+    const fallback = color => new THREE.MeshStandardMaterial({ color, roughness: .6 });
     const mat = {
-      floor: new THREE.MeshStandardMaterial({ map: marble(1024, { tiles: 4, veins: 12, repeat: [2, 4] }), roughness: .3, envMapIntensity: .45 }),
-      stone: new THREE.MeshStandardMaterial({ map: travertine, roughness: .78, envMapIntensity: .25 }),
-      oak: new THREE.MeshStandardMaterial({ map: oak, roughness: .6, envMapIntensity: .3 }),
-      wall: new THREE.MeshStandardMaterial({ map: limewash, roughness: .96, envMapIntensity: .3 }),
-      ceiling: new THREE.MeshStandardMaterial({ color: '#f5f0e7', roughness: 1, envMapIntensity: .25, emissive: '#fff2dc', emissiveIntensity: .12 }),
-      metal: new THREE.MeshStandardMaterial({ color: '#2a2622', metalness: .65, roughness: .45 }),
-      rug: new THREE.MeshStandardMaterial({ color: '#d6c9b3', roughness: 1, envMapIntensity: .15 }),
-      glow: new THREE.MeshBasicMaterial({ map: glowMap, color: '#ffdcae', transparent: true, opacity: .85, depthWrite: false, toneMapped: false }),
-      strip: new THREE.MeshBasicMaterial({ color: '#fff0d6', toneMapped: false })
+      stone: (lib.travertine || fallback('#d8cab3')).clone(),
+      oak: (lib.oak || fallback('#c4a073')).clone(),
+      metal: (lib.metal || fallback('#2a2622')).clone()
     };
-    const box = (w, h, d, m, x, y, z, shadow = true) => {
+    const box = (w, h, d, m, x, y, z) => {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
-      mesh.position.set(x, y, z); mesh.castShadow = shadow; mesh.receiveShadow = true;
-      scene.add(mesh); return mesh;
+      mesh.position.set(x, y, z); scene.add(mesh); return mesh;
     };
-    const plane = (w, h, m, x, y, z, rx = 0, ry = 0) => {
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m);
-      mesh.position.set(x, y, z); mesh.rotation.set(rx, ry, 0, 'YXZ'); mesh.raycast = () => {};
-      scene.add(mesh); return mesh;
-    };
-
-    /* 바닥 · 천장 · 벽 */
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, DEPTH * 2), mat.floor);
-    floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
-    const ceil = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, DEPTH * 2), mat.ceiling);
-    ceil.rotation.x = Math.PI / 2; ceil.position.y = H; scene.add(ceil);
-    box(.2, H, DEPTH * 2, mat.wall, -W - .1, H / 2, 0, false);
-    box(.2, H, DEPTH * 2, mat.wall, W + .1, H / 2, 0, false);
-    box(W * 2, H, .2, mat.wall, 0, H / 2, DEPTH + .1, false);
-    box(W * 2, H, .2, mat.wall, 0, H / 2, -DEPTH - .1, false);
-    // 가운데 벽과 아치 문
-    const sideW = W - DOOR, ARCH = 1.9;
-    box(sideW, H, .2, mat.wall, -(DOOR + sideW / 2), H / 2, 0);
-    box(sideW, H, .2, mat.wall, DOOR + sideW / 2, H / 2, 0);
-    {
-      const shape = new THREE.Shape();
-      shape.moveTo(-DOOR, ARCH); shape.lineTo(-DOOR, H); shape.lineTo(DOOR, H); shape.lineTo(DOOR, ARCH);
-      shape.absarc(0, ARCH, DOOR, 0, Math.PI, false);
-      const arch = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: .2, bevelEnabled: false, curveSegments: 32 }), new THREE.MeshStandardMaterial({ color: '#e6ddcf', roughness: .96, envMapIntensity: .3 }));
-      arch.position.z = -.1; arch.castShadow = true; arch.receiveShadow = true; scene.add(arch);
-    }
-    // 세로 살 오크 벽: 입구 쪽 벽 전체, Room B 안쪽 벽의 왼쪽
-    function slatWall(w, x, z, ry) {
-      const tex = slats.clone(); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(w / .5, 1); tex.needsUpdate = true;
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, H), new THREE.MeshStandardMaterial({ map: tex, roughness: .62, envMapIntensity: .3 }));
-      m.position.set(x, H / 2, z); m.rotation.y = ry; m.receiveShadow = true; scene.add(m);
-    }
-    slatWall(W * 2, 0, DEPTH - .01, Math.PI);
-    slatWall(5.0, -1.5, -DEPTH + .01, 0);
-
-    // 간접 조명: 양옆 벽 위쪽 선반 뒤에서 올라오는 따뜻한 빛
-    for (const side of [-1, 1]) {
-      const x = side * (W - .09);
-      box(.18, .04, DEPTH * 2, mat.ceiling, x, H - .34, 0, false);
-      box(.03, .02, DEPTH * 2 - .1, mat.strip, side * (W - .03), H - .31, 0, false);
-      plane(DEPTH * 2, .34, mat.glow, side * (W - .004), H - .17, 0, 0, -side * Math.PI / 2);
-      const onCeil = plane(DEPTH * 2, 1.1, mat.glow, side * (W - .55), H - .004, 0, Math.PI / 2, -side * Math.PI / 2);
-      onCeil.material = mat.glow;
+    // 물건 밑에 깔리는 부드러운 그림자(구운 빛에는 상품과 받침대가 없으므로)
+    function blob(x, y, z, w, d, ry = 0) {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshBasicMaterial({ map: blobMap, transparent: true, depthWrite: false }));
+      m.rotation.set(-Math.PI / 2, ry, 0, 'YXZ'); m.position.set(x, y, z); m.raycast = () => {}; m.renderOrder = 1;
+      scene.add(m); return m;
     }
 
-    // 안내판: 문 옆의 작은 판, 입구 벽의 글씨
+    // 안내판: 문 옆의 작은 판
     const sign = (lines, x, y, z, ry, w, opts) => {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w / 4), new THREE.MeshStandardMaterial({ map: textTexture(lines, opts), roughness: .7, envMapIntensity: .2, transparent: !opts?.bg }));
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w / 4), new THREE.MeshStandardMaterial({ map: textTexture(lines, opts), roughness: .7, transparent: !opts?.bg }));
       m.position.set(x, y, z); m.rotation.y = ry; scene.add(m); return m;
     };
     sign(['ROOM B', '가방 · 파우치 · 오브제'], 1.75, 1.62, .105, 0, .9, { bg: '#26231f' });
     sign(['ROOM A', '테이블 패브릭'], -1.75, 1.62, -.105, Math.PI, .9, { bg: '#26231f' });
-    sign(['OHANAE', 'MY SWEET CAKE HOUSE'], 0, 2.0, DEPTH - .02, Math.PI, 2.4);
+    // 가게 간판(오하나에 로고의 일본어 표기): 들어서면 정면에 보이는 가운데 벽과, Room B 의 오크 살 벽
+    const LOGO_LINES = ['おはなえ', 'OHANAE  ·  MY SWEET CAKE HOUSE'], LOGO_FONT = '"Zen Antique", "Gowun Batang", serif';
+    sign(LOGO_LINES, -2.3, 1.95, .105, 0, 1.8, { size: 120, font: LOGO_FONT, fg: '#2a2622' });
+    sign(LOGO_LINES, -1.5, 2.3, -DEPTH + .034, 0, 2.6, { size: 120, font: LOGO_FONT });
 
-    // 창 (Room A 왼쪽 벽, Room B 뒤 벽)
-    function windowAt(x, y, z, ry, w = 1.6, h = 1.4) {
-      const g = new THREE.Group();
-      g.add(new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: '#fff7ea' })));
-      [[w + .08, .05, 0, h / 2], [w + .08, .05, 0, -h / 2], [.05, h, -w / 2, 0], [.05, h, w / 2, 0], [.03, h, 0, 0]].forEach(([bw, bh, bx, by]) => {
-        const b = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, .05), mat.metal); b.position.set(bx, by, .025); g.add(b);
-      });
-      g.position.set(x, y, z); g.rotation.y = ry; scene.add(g);
-    }
-    windowAt(-W + .01, 1.7, 4.2, Math.PI / 2, 1.8, 1.9);
-    windowAt(2.6, 1.7, -DEPTH + .01, 0, 1.3, 1.9);
-
-    /* 조명 — 따뜻한 낮빛 */
-    scene.add(new THREE.HemisphereLight('#fff6e8', '#d8cbb9', .72));
-    const sun = new THREE.DirectionalLight('#ffe4bf', 1.35);
-    sun.position.set(-9, 6, 3); sun.target.position.set(0, 0, 2);
-    sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -.0005;
-    Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 30 });
-    scene.add(sun, sun.target);
-    // 종이 등
-    function pendant(x, z, power = 5, size = .3) {
-      const cord = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .7), mat.metal); cord.position.set(x, H - .35, z); scene.add(cord);
-      const shade = new THREE.Mesh(new THREE.SphereGeometry(size, 28, 18), new THREE.MeshStandardMaterial({ color: '#fff4e0', emissive: '#ffe2b4', emissiveIntensity: .95, roughness: 1 }));
-      shade.scale.y = .78; shade.position.set(x, H - .9, z); scene.add(shade);
-      const light = new THREE.PointLight('#ffd9a8', power, 7, 1.6); light.position.set(x, H - 1.15, z); scene.add(light);
-    }
-    pendant(0, 3.6, 5, .36); pendant(0, -4, 5, .32); pendant(2.6, 5.4, 2.5, .22); pendant(-2.6, -3.4, 2.5, .22);
-
-    /* 가구 — space.js 의 목록대로 세운다. 부딪히는 상자는 xz 평면 */
-    const obstacles = [];
-    for (const f of FURNITURE) {
-      if (f.kind === 'table') {   // 두꺼운 오크 상판을 트래버틴 판 다리 둘이 받친다
-        box(f.w, .07, f.d, mat.oak, f.x, f.h - .035, f.z);
-        const along = f.w >= f.d;
-        for (const s of [-1, 1]) {
-          if (along) box(.14, f.h - .07, f.d - .16, mat.stone, f.x + s * (f.w / 2 - .32), (f.h - .07) / 2, f.z);
-          else box(f.w - .16, f.h - .07, .14, mat.stone, f.x, (f.h - .07) / 2, f.z + s * (f.d / 2 - .32));
-        }
-        if (Math.max(f.w, f.d) > 2) {   // 큰 테이블 밑 둥근 러그
-          const rug = new THREE.Mesh(new THREE.CircleGeometry(Math.max(f.w, f.d) / 2 + .55, 64), mat.rug);
-          rug.rotation.x = -Math.PI / 2; rug.position.set(f.x, .006, f.z); rug.receiveShadow = true; scene.add(rug);
-        }
-      } else box(f.w, f.h, f.d, mat.stone, f.x, f.h / 2, f.z);
-      obstacles.push({ x: f.x, z: f.z, w: f.w, d: f.d });
-    }
     // 테이블 위 레이스 깔개
     function runner(id, dx, w, d, color) {
       const f = FURNITURE.find(o => o.id === id);
-      const r = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: lace(color), roughness: .9, envMapIntensity: .2 }));
-      r.rotation.x = -Math.PI / 2; r.position.set(f.x + dx, f.h + .003, f.z); r.receiveShadow = true; scene.add(r);
+      const r = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: lace(color), roughness: .9 }));
+      r.rotation.x = -Math.PI / 2; r.position.set(f.x + dx, f.h + .003, f.z); scene.add(r);
     }
     runner('tableA', -.95, .7, 1.1, '#efe9de'); runner('tableA', .05, .7, 1.1, '#6e4b34'); runner('tableA', 1.0, .7, 1.1, '#4b2a4a');
     runner('tableB', -.5, .8, 1.0, '#4b2a4a'); runner('tableB', .5, .8, 1.0, '#efe9de');
-    // 화분
-    for (const [x, z] of PLANTS) {
-      const pot = new THREE.Mesh(new THREE.CylinderGeometry(.24, .18, .5, 28), mat.stone);
-      pot.position.set(x, .25, z); pot.castShadow = true; scene.add(pot);
-      const leafMat = new THREE.MeshStandardMaterial({ color: '#66805a', roughness: .85, envMapIntensity: .25 });
-      for (let i = 0; i < 9; i++) {
-        const leaf = new THREE.Mesh(new THREE.SphereGeometry(.16, 10, 8), leafMat);
-        const a = i / 9 * Math.PI * 2; leaf.scale.set(.7, 1.5, .4);
-        leaf.position.set(x + Math.cos(a) * .18, .75 + (i % 3) * .14, z + Math.sin(a) * .18); leaf.rotation.set(Math.cos(a) * .6, a, Math.sin(a) * .6);
-        leaf.castShadow = true; scene.add(leaf);
-      }
-      obstacles.push({ x, z, w: .5, d: .5 });
-    }
+
+    /* 부딪히는 상자(xz 평면): 가구 · 화분 · 큰 소품. 모양은 room.glb 에 있고 자리는 space.js 가 정한다 */
+    const obstacles = [
+      ...FURNITURE.map(f => ({ x: f.x, z: f.z, w: f.w, d: f.d })),
+      ...PLANTS.map(([x, z]) => ({ x, z, w: .6, d: .6 })),
+      ...DECOR_BLOCKS.map(o => ({ x: o.x, z: o.z, w: o.w, d: o.d }))
+    ];
+
+    // 화면은 바뀐 것이 있을 때만 다시 그린다(가만히 서 있으면 쉬어서 배터리를 아낀다)
+    let framesLeft = 3;
+    const invalidate = (n = 2) => { framesLeft = Math.max(framesLeft, n); };
 
     /* ───────── 물건 놓기 (layout.items) ─────────
        type frame = 사진 액자, model = 3D 모델(.glb). 가구 위면 그 위에, 바닥이면 받침대 위에, hang 이면 벽 높이 y 에 건다. */
@@ -479,18 +383,19 @@
     const textures = new THREE.TextureLoader(), gltf = new GLTFLoader();
     let pending = 0, settled = 0;
     function settle() {
-      settled++;
+      settled++; invalidate();
       $('loading').textContent = `상품 ${Math.min(settled, pending)} / ${pending}`;
       if (settled >= pending) ready();
     }
+    const PHOTO_GLOW = .3;   // 사진은 방의 빛에 더해 스스로도 조금 빛나게 해서, 어두운 자리에서도 상품이 또렷하게 보인다
     function tagParts(root, id) { root.traverse(o => { if (o.isMesh) o.userData.id = id; }); }
 
     function buildFrame(it, p, base, ry, entry) {
       const size = it.size || .5, hang = !!it.hang, tilt = hang ? 0 : -.12;
       const g = new THREE.Group();
       const frame = new THREE.Mesh(new THREE.BoxGeometry(size + .03, size * 1.25 + .03, .022), mat.metal);
-      frame.castShadow = true; g.add(frame);
-      const face = new THREE.MeshStandardMaterial({ color: '#e6e6e6', roughness: .75, envMapIntensity: .15, emissive: '#ffffff', emissiveIntensity: 0 });
+      g.add(frame);
+      const face = new THREE.MeshStandardMaterial({ color: '#e6e6e6', roughness: .8, emissive: '#000000', emissiveIntensity: PHOTO_GLOW });
       const board = new THREE.Mesh(new THREE.PlaneGeometry(size, size * 1.25), face);
       board.position.z = .014; g.add(board);
       if (!hang) {   // 받침 다리
@@ -500,8 +405,8 @@
       g.position.set(it.x, hang ? base : base + size * .62, it.z);
       g.rotation.set(tilt, ry, 0, 'YXZ');
       tagParts(g, p.id);
-      scene.add(g);
-      Object.assign(entry, { root: g, cy: g.position.y, highlight: on => { face.emissiveIntensity = on ? .14 : 0; } });
+      scene.add(g); pickables.push(g);
+      Object.assign(entry, { root: g, cy: g.position.y, highlight: on => { face.emissiveIntensity = on ? PHOTO_GLOW + .2 : PHOTO_GLOW; } });
       pending++;
       textures.load(p.photo, tex => {
         tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
@@ -509,14 +414,14 @@
         board.geometry.dispose(); board.geometry = new THREE.PlaneGeometry(size, size * aspect);
         frame.geometry.dispose(); frame.geometry = new THREE.BoxGeometry(size + .03, size * aspect + .03, .022);
         if (!hang) { g.position.y = base + (size * aspect) / 2 * Math.cos(tilt); entry.cy = g.position.y; }
-        face.map = tex; face.color.set('#ffffff'); face.needsUpdate = true;
+        face.map = tex; face.color.set('#ffffff'); face.emissiveMap = tex; face.emissive.set('#ffffff'); face.needsUpdate = true;
         settle();
       }, undefined, settle);
     }
     function buildModel(it, p, base, ry, entry) {
       const size = it.size || .4, g = new THREE.Group(), pivot = new THREE.Group();
       g.add(pivot); g.position.set(it.x, base, it.z); g.rotation.y = ry;
-      scene.add(g);
+      scene.add(g); pickables.push(g);
       Object.assign(entry, { root: g, cy: base + size / 2, pivot, highlight: on => { pivot.scale.setScalar(on ? 1.06 : 1); } });
       pending++;
       const fallback = () => { scene.remove(g); entry.pivot = null; buildFrame({ ...it, size: Math.max(size, .4) }, p, base, ry, entry); settle(); };
@@ -527,7 +432,6 @@
         b.setFromObject(m);
         const c = b.getCenter(new THREE.Vector3());
         m.position.x -= c.x; m.position.z -= c.z; m.position.y -= b.min.y;
-        m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
         pivot.add(m); tagParts(g, p.id);
         entry.cy = base + (b.max.y - b.min.y) / 2;
         settle();
@@ -544,10 +448,12 @@
         if (f) base = f.h;
         else {   // 바닥에 놓으면 트래버틴 받침대가 생긴다
           box(PLINTH.w, PLINTH.h, PLINTH.w, mat.stone, it.x, PLINTH.h / 2, it.z);
+          blob(it.x, .004, it.z, PLINTH.w * 2.6, PLINTH.w * 2.6);
           obstacles.push({ x: it.x, z: it.z, w: PLINTH.w, d: PLINTH.w });
           base = PLINTH.h;
         }
       }
+      if (!it.hang) blob(it.x, base + .004, it.z, (it.size || .5) * 1.5, (it.size || .5) * 1.1, ry);
       const entry = { id: p.id, nx: Math.sin(ry), nz: Math.cos(ry) };
       if (it.type === 'model') buildModel(it, p, base, ry, entry); else buildFrame(it, p, base, ry, entry);
       entries.push(entry);
@@ -682,7 +588,7 @@
       dismissHint();
       return true;
     }
-    function cancelWalk() { walk = null; marker.visible = false; }
+    function cancelWalk() { walk = null; marker.visible = false; invalidate(); }
     function stepWalk(dt) {
       if (!walk) return false;
       const p = camera.position, w = walk;
@@ -754,7 +660,7 @@
     function hitAt(clientX, clientY) {
       ndc.set(clientX / innerWidth * 2 - 1, -(clientY / innerHeight) * 2 + 1);
       raycaster.setFromCamera(ndc, camera);
-      return raycaster.intersectObjects(scene.children, true)[0] || null;
+      return raycaster.intersectObjects(pickables, true)[0] || null;
     }
     // 누름: 상품이면 다가가서 열고, 아니면 그 자리(가구 · 벽이면 그 앞)로 걸어간다
     function tapAt(clientX, clientY) {
@@ -776,6 +682,7 @@
         $('tip').style.left = x + 'px'; $('tip').style.top = y + 'px'; $('tip').hidden = false;
       } else $('tip').hidden = true;
       $('view').classList.toggle('pointing', !!id);
+      invalidate();
     }
 
     // 끌면 잡은 곳이 손을 따라온다(거리뷰 방식). 확대해도 같은 느낌이 되게 시야각에 맞춘다.
@@ -784,6 +691,7 @@
       yaw += dx * k; pitch = clamp(pitch + dy * k, -1.2, 1.2);
       camera.rotation.set(pitch, yaw, 0);
       if (walk) walk.follow = false;
+      invalidate();
     }
 
     const el = renderer.domElement;
@@ -803,6 +711,7 @@
       const onFloor = hit && !hit.object.userData.id && hit.point.y < .05 && !blocked(hit.point.x, hit.point.z);
       hoverRing.visible = !!onFloor && !walk;
       if (onFloor) hoverRing.position.set(hit.point.x, .02, hit.point.z);
+      invalidate();
     });
     addEventListener('mouseup', e => {
       if (dragging && moved < 6 && e.target === el) tapAt(e.clientX, e.clientY);
@@ -875,6 +784,67 @@
     addEventListener('keyup', e => { keys[e.code] = false; });
     addEventListener('blur', () => { for (const k in keys) keys[k] = false; dragging = false; });
 
+    /* ───────── 효과음 ─────────
+       소리 파일 없이 WebAudio 로 그때그때 만든다: 발소리(대리석 · 러그), 누름, 상품 창 여닫기, 담기, 방 옮기기, 옅은 공기 소리.
+       브라우저 규칙상 첫 누름(쇼룸으로 들어가기) 뒤에야 소리가 난다. */
+    const SOUND_KEY = 'ohanae-3d-sound';
+    const sfx = (() => {
+      let ctx = null, master = null, noiseBuf = null, on = true;
+      try { on = localStorage.getItem(SOUND_KEY) !== '0'; } catch (_) {}
+      function start() {
+        if (ctx) { ctx.resume?.(); return; }
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        ctx = new AC();
+        master = ctx.createGain(); master.gain.value = on ? 1 : 0; master.connect(ctx.destination);
+        noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        // 방 안의 아주 옅은 공기 소리
+        const air = ctx.createBufferSource(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+        air.buffer = noiseBuf; air.loop = true; lp.type = 'lowpass'; lp.frequency.value = 240; g.gain.value = .014;
+        air.connect(lp).connect(g).connect(master); air.start();
+      }
+      const shape = (g, t, attack, peak, decay) => { g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + attack); g.gain.exponentialRampToValueAtTime(.0001, t + attack + decay); };
+      function tone(freq, peak, decay, { type = 'sine', delay = 0, slide = 0 } = {}) {
+        if (!ctx) return;
+        const t = ctx.currentTime + delay, o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, t);
+        if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + decay);
+        shape(g, t, .004, peak, decay); o.connect(g).connect(master); o.start(t); o.stop(t + decay + .05);
+      }
+      function noise(peak, decay, { type = 'lowpass', freq = 800, q = .7, sweep = 0, attack = .003 } = {}) {
+        if (!ctx) return;
+        const t = ctx.currentTime, src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+        src.buffer = noiseBuf; src.loop = true; f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
+        if (sweep) f.frequency.exponentialRampToValueAtTime(sweep, t + attack + decay);
+        shape(g, t, attack, peak, decay); src.connect(f).connect(g).connect(master);
+        src.start(t, Math.random() * .9); src.stop(t + attack + decay + .05);
+      }
+      return {
+        start,
+        get on() { return on; },
+        toggle() {
+          on = !on;
+          try { localStorage.setItem(SOUND_KEY, on ? '1' : '0'); } catch (_) {}
+          if (master) master.gain.setTargetAtTime(on ? 1 : 0, ctx.currentTime, .03);
+          return on;
+        },
+        // 발소리: 대리석은 또각, 러그 위는 낮고 무르게
+        step(soft) { const v = .88 + Math.random() * .26; noise(soft ? .03 : .075, soft ? .09 : .055, { freq: (soft ? 380 : 1700) * v, q: .9 }); tone((soft ? 68 : 96) * v, soft ? .045 : .07, .07, { slide: 44 }); },
+        tap() { tone(1500, .025, .04, { type: 'triangle' }); },
+        open() { noise(.028, .2, { type: 'bandpass', freq: 520, sweep: 1900, q: 1.2, attack: .05 }); },
+        close() { noise(.02, .15, { type: 'bandpass', freq: 1600, sweep: 480, q: 1.2, attack: .02 }); },
+        chime() { tone(1318.5, .06, .7); tone(1975.5, .045, .9, { delay: .09 }); tone(2637, .018, .6, { delay: .09 }); },
+        door() { [880, 1174.7, 1318.5].forEach((f, i) => tone(f, .03, 1.1, { delay: i * .13 })); }
+      };
+    })();
+    $('soundToggle').setAttribute('aria-pressed', String(sfx.on));
+    $('soundToggle').onclick = () => { const on = sfx.toggle(); $('soundToggle').setAttribute('aria-pressed', String(on)); if (on) { sfx.start(); sfx.tap(); } toast(on ? '소리를 켰어요' : '소리를 껐어요'); };
+    // 러그 위인지(발소리가 달라진다)
+    const RUGS = FURNITURE.filter(f => f.kind === 'table' && Math.max(f.w, f.d) > 2).map(f => ({ x: f.x, z: f.z, r: Math.max(f.w, f.d) / 2 + .55 }));
+    const onRug = (x, z) => RUGS.some(r => Math.hypot(x - r.x, z - r.z) < r.r);
+
     /* ───────── 장바구니 · 상품 창 ───────── */
     const STORAGE_KEY = 'ohanae-virtual-shop-cart';
     let cart = {};
@@ -892,24 +862,32 @@
       stick.x = stick.y = 0;
       cancelWalk(); setHover(null); hoverRing.visible = false;
       $('panel').inert = false; $('panel').classList.add('open'); $('scrim').classList.add('open');
+      sfx.open();
       setTimeout(() => $('closeButton').focus({ preventScroll: true }), 60);
     }
-    function closePanel() { $('panel').classList.remove('open'); $('scrim').classList.remove('open'); $('panel').inert = true; }
+    function closePanel() {
+      if (panelOpen()) sfx.close();
+      $('panel').classList.remove('open'); $('scrim').classList.remove('open'); $('panel').inert = true;
+    }
+    const shippingNote = `배송비 ${won(SHOP.shipping)} · ${won(SHOP.freeShippingOver)} 이상 무료배송`;
     function openProduct(id) {
       const p = getProduct(id);
       $('eyebrow').textContent = roomName(camera.position.z);
       $('panelTitle').textContent = p.name;
       $('panelBody').innerHTML = `
-        <img class="photo" src="${p.photo}" alt="${p.name}">
-        <div class="detail"><div><p>${p.spec || ''}</p></div><span class="price">${won(p.price)}</span></div>
-        <div class="row"><button class="add" data-add="${p.id}">장바구니에 담기</button>${p.url ? `<a class="official" href="${p.url}" target="_blank" rel="noopener">공식 상품 보기 ↗</a>` : ''}</div>
+        <img class="photo" src="${esc(p.photo)}" alt="${esc(p.name)}">
+        <div class="detail"><div><p>${esc(p.spec || '')}</p></div><span class="price">${won(p.price)}</span></div>
+        ${p.desc?.length ? `<ul class="desc-list">${p.desc.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+        ${p.story ? `<p class="story">${esc(p.story)}</p>` : ''}
+        <div class="row">${p.url ? `<a class="buy" href="${esc(p.url)}" target="_blank" rel="noopener">오하나에에서 구매하기 ↗</a>` : ''}<button class="add" data-add="${esc(p.id)}">장바구니에 담기</button></div>
+        <p class="ship">${shippingNote} · 결제는 오하나에 사이트에서 진행돼요</p>
         <div class="tour-row"><button data-tour="-1">← 이전 상품</button><button data-tour="1">다음 상품 →</button></div>`;
       $('panelBody').scrollTop = 0;
       $('panelFoot').hidden = true;
       openPanel();
     }
     function openCart() {
-      $('eyebrow').textContent = 'CHECKOUT';
+      $('eyebrow').textContent = 'CART';
       $('panelTitle').textContent = '장바구니';
       renderCart(); openPanel();
     }
@@ -920,18 +898,24 @@
         $('panelFoot').hidden = true; return;
       }
       $('panelBody').innerHTML = ids.map(id => { const p = getProduct(id); return `
-        <div class="cart-line"><img src="${p.photo}" alt=""><div><h3>${p.name}</h3><p>${won(p.price)}</p></div>
-        <div class="stepper"><button data-step="${id}" data-delta="-1" aria-label="${p.name} 하나 빼기">−</button><span>${cart[id]}</span><button data-step="${id}" data-delta="1" aria-label="${p.name} 하나 더하기">+</button></div></div>`; }).join('');
-      const total = ids.reduce((s, id) => s + getProduct(id).price * cart[id], 0);
+        <div class="cart-line"><img src="${esc(p.photo)}" alt=""><div><h3>${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.name)} ↗</a>` : esc(p.name)}</h3><p>${won(p.price)}</p></div>
+        <div class="stepper"><button data-step="${esc(id)}" data-delta="-1" aria-label="${esc(p.name)} 하나 빼기">−</button><span>${cart[id]}</span><button data-step="${esc(id)}" data-delta="1" aria-label="${esc(p.name)} 하나 더하기">+</button></div></div>`; }).join('');
+      const sub = ids.reduce((s, id) => s + getProduct(id).price * cart[id], 0);
+      const ship = sub >= SHOP.freeShippingOver ? 0 : SHOP.shipping;
       $('panelFoot').hidden = false;
-      $('panelFoot').innerHTML = `<div class="summary"><span>합계</span><span>${won(total)}</span></div><button class="checkout" id="checkoutButton">오하나에 공식몰에서 주문하기</button><p class="note">공식몰에서 상품 옵션과 재고를 다시 확인해 주세요.</p>`;
+      $('panelFoot').innerHTML = `
+        <div class="sum-row"><span>상품 금액</span><span>${won(sub)}</span></div>
+        <div class="sum-row"><span>배송비</span><span>${ship ? won(ship) : '무료'}</span></div>
+        <div class="summary"><span>합계</span><span>${won(sub + ship)}</span></div>
+        <a class="checkout" href="${esc(SHOP.products)}" target="_blank" rel="noopener">오하나에에서 주문하기 ↗</a>
+        <p class="note">장바구니는 고른 물건을 모아 보는 곳이에요. 주문과 결제는 오하나에 사이트에서 상품 이름을 눌러 진행해 주세요.</p>`;
     }
     document.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
-      if (b.dataset.add) { cart[b.dataset.add] = (cart[b.dataset.add] || 0) + 1; save(); toast(`${getProduct(b.dataset.add).name} · 담았어요`); }
+      if (b.dataset.add) { cart[b.dataset.add] = (cart[b.dataset.add] || 0) + 1; save(); sfx.chime(); toast(`${getProduct(b.dataset.add).name} · 담았어요`); }
+      else if (!b.dataset.tour && b.id !== 'closeButton' && b.id !== 'cartButton' && b.id !== 'enterButton') sfx.tap();
       if (b.dataset.step) { const q = (cart[b.dataset.step] || 0) + Number(b.dataset.delta); if (q <= 0) delete cart[b.dataset.step]; else cart[b.dataset.step] = q; save(); renderCart(); }
       if (b.dataset.tour) { b.blur(); tourStep(Number(b.dataset.tour)); }
-      if (b.id === 'checkoutButton') window.open('https://ohanae.kr/PRODUCT', '_blank', 'noopener');
     });
     $('cartButton').onclick = openCart;
     $('closeButton').onclick = closePanel;
@@ -967,18 +951,18 @@
     function ready() { $('enterButton').disabled = false; $('enterButton').textContent = '쇼룸으로 들어가기'; }
     if (!pending) ready();
     setTimeout(() => { if ($('enterButton').disabled) ready(); }, 8000);
-    $('enterButton').onclick = () => { $('intro').hidden = true; hintTimer = setTimeout(dismissHint, 8000); };
+    $('enterButton').onclick = () => { $('intro').hidden = true; sfx.start(); sfx.door(); invalidate(5); hintTimer = setTimeout(dismissHint, 8000); };
 
     /* ───────── 그리기 ───────── */
     const clock = new THREE.Clock();
-    let bob = 0, probe = { frames: 0, time: 0 };
+    let bobPhase = 0, bobAmp = 0, lastStep = 0, probe = { frames: 0, time: 0 };
     renderer.setAnimationLoop(() => {
       const raw = clock.getDelta(), dt = Math.min(raw, .1);
-      // 느린 기기에서는 한 번만 화질을 낮춘다(그림자를 끄고 해상도를 줄인다)
+      // 느린 기기에서는 한 번만 해상도를 낮춘다(처음 45장은 쉬지 않고 그려서 잰다)
       if (probe && $('intro').hidden && raw < 1) {
-        probe.frames++; probe.time += raw;
+        probe.frames++; probe.time += raw; invalidate();
         if (probe.frames === 45) {
-          if (probe.time / 45 > .045) { sun.castShadow = false; renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); }
+          if (probe.time / 45 > .045) { renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25)); renderer.setSize(innerWidth, innerHeight); }
           probe = null;
         }
       }
@@ -987,16 +971,28 @@
         if (move(dt)) { cancelWalk(); dismissHint(); walking = true; }
         else walking = stepWalk(dt);
       }
-      bob = walking ? bob + dt * 9 : bob * .9;
-      camera.position.y = EYE + Math.sin(bob) * .022;
-      if (Math.abs(zoom - zoomTarget) > .001) { zoom += (zoomTarget - zoom) * Math.min(1, dt * 10); applyFov(); }
+      // 걸을 때의 작은 출렁임과 발소리(출렁임 반 바퀴마다 한 걸음)
+      if (walking) bobPhase += dt * 9;
+      bobAmp += ((walking ? 1 : 0) - bobAmp) * Math.min(1, dt * 8);
+      camera.position.y = EYE + Math.sin(bobPhase) * .022 * bobAmp;
+      const stepNo = Math.floor(bobPhase / Math.PI);
+      if (walking && stepNo !== lastStep) { lastStep = stepNo; sfx.step(onRug(camera.position.x, camera.position.z)); }
+      const zooming = Math.abs(zoom - zoomTarget) > .001;
+      if (zooming) { zoom += (zoomTarget - zoom) * Math.min(1, dt * 10); applyFov(); }
       if (marker.visible) marker.scale.setScalar(1 + Math.sin(clock.elapsedTime * 6) * .08);
-      for (const e of entries) if (e.pivot) e.pivot.rotation.y += dt * .45;   // 3D 모델은 천천히 돈다
-      const room = roomName(camera.position.z);
-      if (room !== lastRoom) { if (lastRoom) toast(room.startsWith('ROOM A') ? 'Room A로 들어왔어요' : 'Room B로 들어왔어요'); $('roomLabel').textContent = room; lastRoom = room; }
-      renderer.render(scene, camera);
+      let spinning = false;
+      for (const e of entries) if (e.pivot) { e.pivot.rotation.y += dt * .45; spinning = true; }   // 3D 모델은 천천히 돈다
+      const here = roomName(camera.position.z);
+      if (here !== lastRoom) {
+        if (lastRoom) { toast(here.startsWith('ROOM A') ? 'Room A로 들어왔어요' : 'Room B로 들어왔어요'); sfx.door(); }
+        $('roomLabel').textContent = here; lastRoom = here;
+        scene.environment = here.startsWith('ROOM A') ? envMaps.A : envMaps.B;   // 그 방의 360° 사진으로 바꾼다
+        invalidate();
+      }
+      if (walking || zooming || spinning || marker.visible || bobAmp > .01) invalidate();
+      if (framesLeft > 0) { framesLeft--; renderer.render(scene, camera); }
     });
-    addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; applyFov(); renderer.setSize(innerWidth, innerHeight); });
+    addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; applyFov(); renderer.setSize(innerWidth, innerHeight); invalidate(); });
   </script>
 </body>
 </html>

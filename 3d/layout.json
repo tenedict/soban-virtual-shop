@@ -1,30 +1,269 @@
 {
-  "version": 1,
+  "version": 2,
   "products": [
-    { "id": "o14", "name": "white lace tea coaster", "spec": "OHANAE · white lace", "price": 9000, "photo": "../products/white-lace-tea-coaster.webp", "url": "https://ohanae.kr/PRODUCT/?idx=14" },
-    { "id": "o9", "name": "white lace table mat", "spec": "OHANAE · white lace", "price": 21000, "photo": "../products/white-lace-table-mat.webp", "url": "https://ohanae.kr/PRODUCT/?idx=9" },
-    { "id": "o13", "name": "brown table mat", "spec": "OHANAE · brown fabric", "price": 21000, "photo": "../products/brown-table-mat.webp", "url": "https://ohanae.kr/PRODUCT/?idx=13" },
-    { "id": "o7", "name": "purple lace mat", "spec": "OHANAE · purple lace", "price": 35000, "photo": "../products/purple-lace-mat.webp", "url": "https://ohanae.kr/PRODUCT/?idx=7" },
-    { "id": "o15", "name": "선물 포장", "spec": "OHANAE gift wrapping", "price": 1000, "photo": "../products/gift-wrap.webp", "url": "https://ohanae.kr/PRODUCT/?idx=15" },
-    { "id": "o11", "name": "two tuck lace shoulder bag", "spec": "OHANAE · purple lace", "price": 79000, "photo": "../products/two-tuck-lace-shoulder-bag.webp", "url": "https://ohanae.kr/PRODUCT/?idx=11" },
-    { "id": "o10", "name": "hanging tissue case", "spec": "OHANAE · white lace", "price": 37000, "photo": "../products/hanging-tissue-case.webp", "url": "https://ohanae.kr/PRODUCT/?idx=10" },
-    { "id": "o6", "name": "purple lace flower pouch", "spec": "OHANAE · purple flower lace", "price": 38000, "photo": "../products/purple-lace-flower-pouch.webp", "url": "https://ohanae.kr/PRODUCT/?idx=6" },
-    { "id": "o1", "name": "bold flower pouch", "spec": "OHANAE · white flower lace", "price": 36000, "photo": "../products/bold-flower-pouch.webp", "url": "https://ohanae.kr/PRODUCT/?idx=1" },
-    { "id": "o8", "name": "brown lace book cover", "spec": "OHANAE · brown lace", "price": 31000, "photo": "../products/brown-lace-book-cover.webp", "url": "https://ohanae.kr/PRODUCT/?idx=8" },
-    { "id": "o12", "name": "white lace lantern cover", "spec": "OHANAE · white flower lace", "price": 34000, "photo": "../products/white-lace-lantern-cover.webp", "url": "https://ohanae.kr/PRODUCT/?idx=12" }
+    {
+      "id": "o14",
+      "name": "white lace tea coaster",
+      "spec": "10 × 10 cm",
+      "price": 9000,
+      "photo": "../products/white-lace-tea-coaster.webp",
+      "url": "https://ohanae.kr/PRODUCT/?idx=14",
+      "desc": [
+        "화이트 면 원단에 플라워 레이스를 덧댄 정사각형 티코스터입니다.",
+        "중앙을 가로지르는 레이스와 깔끔하게 마무리된 테두리가 은은한 포인트가 됩니다.",
+        "좋아하는 찻잔이나 작은 유리컵 아래에 놓아 티타임을 꾸미거나, 같은 디자인의 테이블 매트와 함께 연출해 보세요."
+      ],
+      "story": "오래 함께한 것들을 좋아합니다. 레이스 위 남겨질 흔적들을 기대해봅니다."
+    },
+    {
+      "id": "o9",
+      "name": "white lace table mat",
+      "spec": "34 × 27 cm",
+      "price": 21000,
+      "photo": "../products/white-lace-table-mat.webp",
+      "url": "https://ohanae.kr/PRODUCT/?idx=9",
+      "desc": [
+        "화이트 면 원단에 폭이 넓은 레이스를 덧댄 테이블 매트입니다.",
+        "같은 화이트 톤 안에서 원단과 레이스의 서로 다른 질감이 은은한 포인트가 됩니다.",
+        "찻잔이나 디저트 접시 아래에 놓아 티타임을 꾸미거나, 테이블 위 작은 소품과 함께 연출해 보세요."
+      ],
+      "story": "여름에도 귀여운 찻잔에 따뜻한 커피를 마실 때 행복하다고 느낄 때가 있습니다. 어디서든 여러분이 좋아하는 계절이 되길 바랍니다."
+    },
+    {
+      "id": "o13",
+      "name": "brown table mat",
+      "spec": "34 × 27 cm",
+      "price": 21000,
+      "photo": "../products/brown-table-mat.webp",
+      "url": "https://ohanae.kr/PRODUCT/?idx=13",
+      "desc": [
+        "브라운 면 원단에 폭이 넓은 레이스를 덧댄 테이블 매트입니다.",
+        "브라운 컬러의 조합들로 빈티지한 분위기를 느낄 수 있습니다.",
+        "좋아하는 찻잔이나 디저트 접시를 올려두거나 작은 소품과 함께 테이블 위를 꾸며보세요."
+      ],
+      "story": "좋아하는 밀크티 레시피를 알려드릴게요. 트와이닝 얼그레이와 아마드 얼그레이를 조합해보세요."
+    },
+    {
+      "id": "o7",
+      "name": "purple lace mat",
+      "spec": "55.5 × 37.5 cm",
+      "price": 35000,
+      "photo": "../products/purple-lace-mat.webp",
+      "url": "https://ohanae.kr/PRODUCT/?idx=7",
+      "desc": [
+        "퍼플 컬러의 린넨 원단에 레이스를 한 줄 덧댄 발매트입니다.",
+        "린넨의 자연스러운 결 위로 짙은 레이스가 더해져, 단정한 사각 형태 안에 섬세한 포인트를 담았습니다.",
+        "현관이나 침대 옆 등 작은 공간에 놓아 퍼플 컬러를 중심으로 분위기를 연출해 보세요."
+      ],
+      "story": "오하나에가 표현하는 빈티지한 따뜻한 무드를 담은 발매트입니다. 좋아하는 공간의 현관 입구를 떠올리며 언젠가 선물할 수 있는 날을 기다립니다."
+    },
+    {
+      "id": "o15",
+      "name": "선물 포장",
+      "spec": "오하나에 선물 포장",
+      "price": 1000,
+      "photo": "../products/gift-wrap.webp",
+      "url": "https://ohanae.kr/PRODUCT/?idx=15",
+      "desc": [],
+      "story": ""
+    },
+    {
+      "id": "o11",
+      "name": "two tuck lace shoulder bag",
+      "spec": "52 × 26 cm · 하단 폭 11 · 손잡이 78",
+      "price": 79000,
+      "photo": "../products/two-tuck-lace-shoulder-bag.webp",
+      "url": "https://ohanae.kr/PRODUCT/?idx=11",
+      "desc": [
+        "양쪽 손잡이 사이드 부분에 주름을 잡아 에스닉한 분위기를 연출한 레이스 숄더백입니다.",
+        "보라색 베이스 원단 위 검정색 레이스를 올려 제작된 가방입니다.",
+        "가방 하단에는 3온스 솜을 넣어 보강을 해 두어 짐을 넣었을 때 늘어짐을 조금 더 방지하도록 제작되었습니다."
+      ],
+      "story": "빈티지한 킷사텐을 좋아합니다. 그 속에 앉아있을 때 조용히 느끼는 모든 감각들을 좋아합니다. 오하나에의 취향이 여러분의 일상에 함께하길 바라며 좋아하는 것들을 가득 담아본 제품입니다."
+    },
+    {
+      "id": "o10",
+      "name": "hanging tissue case",
+      "spec": "12 × 12 × 25 cm",
+      "price": 37000,
+      "photo": "../products/hanging-tissue-case.webp",
+      "url": "https://ohanae.kr/PRODUCT/?idx=10",
+      "desc": [
+        "화이트 패브릭에 레이스 디테일을 더한 행잉 티슈 케이스입니다.",
+        "긴 스트랩을 이용해 벽에 걸거나 테이블 위에 올려두고 사용할 수 있어, 공간에 맞게 두 가지 방식으로 연출할 수 있습니다.",
+        "각티슈를 감싸는 패브릭과 은은한 레이스가 일상적인 생활 소품에 부드러운 분위기를 더해줍니다."
+      ],
+      "story": "평범한 하루에도 좋아하는 것들을 가까이 하는 걸 좋아합니다. 평범했던 하루에 특별한 순간이 생기는 걸 종종 경험합니다."
+    },
+    {
+      "id": "o6",
+      "name": "purple lace flower pouch",
+      "spec": "15 × 8.5 × 8.5 cm",
+      "price": 38000,
+      "photo": "../products/purple-lace-flower-pouch.webp",
+      "url": "https://ohanae.kr/PRODUCT/?idx=6",
+      "desc": [
+        "퍼플 컬러의 린넨 위에 블랙 플라워 레이스를 덧댄 파우치입니다.",
+        "원단 안쪽에 3온스 솜을 덧대어 도톰하게 마감했으며, 입체적인 사각 형태와 지퍼 여밈으로 작은 소지품을 모아 담기 좋습니다.",
+        "은은하게 비치는 퍼플 색감과 블랙 레이스, 지퍼 끝의 메탈 장식이 어우러져 차분한 포인트가 됩니다.",
+        "겨울에서만 느낄 수 있는 따뜻함과 차가움이 공존하는 온도를 린넨과 레이스의 조화로 표현해보았습니다."
+      ],
+      "story": "추운 겨울철 머플러를 두른 듯한 기분을 느껴보세요."
+    },
+    {
+      "id": "o1",
+      "name": "bold flower pouch",
+      "spec": "15 × 8.5 × 8.5 cm",
+      "price": 36000,
+      "photo": "../products/bold-flower-pouch.webp",
+      "url": "https://ohanae.kr/PRODUCT/?idx=1",
+      "desc": [
+        "화이트 컬러의 큼직한 플라워 패턴이 돋보이는 파우치입니다.",
+        "원단 안쪽에 3온스 솜을 덧대어 도톰하게 마감했으며, 입체적인 사각 형태와 지퍼 여밈으로 작은 소지품을 정리하기 좋습니다.",
+        "꽃무늬 원단의 질감과 지퍼 끝의 메탈 장식이 어우러지게 디자인된 제품입니다."
+      ],
+      "story": "긴자에서 만난 킷사텐에서 영감을 얻어 만들어진 파우치입니다. 긴자 킷사텐을 떠올리며 빈티지하지만 깨끗한 이미지를 담아보았습니다."
+    },
+    {
+      "id": "o8",
+      "name": "brown lace book cover",
+      "spec": "13 × 17 cm",
+      "price": 31000,
+      "photo": "../products/brown-lace-book-cover.webp",
+      "url": "https://ohanae.kr/PRODUCT/?idx=8",
+      "desc": [
+        "차분한 브라운 컬러에 레이스 디테일을 더한 북 커버입니다.",
+        "책 표지를 안쪽에 끼워 사용하며, 측면의 메탈 단추로 여며 책이 펼쳐지지 않도록 고정할 수 있습니다.",
+        "짙은 색감과 섬세한 레이스가 어우러져, 매일 읽는 책에 차분한 분위기를 더해줍니다."
+      ],
+      "story": "좋아하는 카페에 앉아 편지를 쓰거나 일기를 쓰는 걸 좋아합니다. 좋아하는 카페에 꼭 어울리는 북커버가 되길 바랍니다."
+    },
+    {
+      "id": "o12",
+      "name": "white lace lantern cover",
+      "spec": "39 × 22 cm",
+      "price": 34000,
+      "photo": "../products/white-lace-lantern-cover.webp",
+      "url": "https://ohanae.kr/PRODUCT/?idx=12",
+      "desc": [
+        "은은하게 비치는 플라워 레이스 원단으로 제작된 화이트 랜턴 커버입니다.",
+        "자연스럽게 퍼지는 실루엣과 길게 늘어지는 레이스 디테일이 부드럽고 빈티지한 분위기를 더해줍니다.",
+        "창가나 침실 한편에 걸어두어 빛이 스며드는 공간을 꾸며보세요."
+      ],
+      "story": ""
+    }
   ],
   "models": [],
   "items": [
-    { "id": "i1", "product": "o14", "type": "frame", "x": -1.18, "z": 3.75, "rot": 0, "size": 0.36 },
-    { "id": "i2", "product": "o9", "type": "frame", "x": -0.72, "z": 3.5, "rot": 0, "size": 0.44 },
-    { "id": "i3", "product": "o13", "type": "frame", "x": 0.05, "z": 3.5, "rot": 0, "size": 0.5 },
-    { "id": "i4", "product": "o7", "type": "frame", "x": 1.0, "z": 3.5, "rot": 0, "size": 0.5 },
-    { "id": "i5", "product": "o15", "type": "frame", "x": 3.3, "z": 5.3, "rot": -90, "size": 0.5 },
-    { "id": "i6", "product": "o11", "type": "frame", "x": -3.97, "z": -2.9, "rot": 90, "size": 0.7, "hang": true, "y": 1.45 },
-    { "id": "i7", "product": "o10", "type": "frame", "x": -3.97, "z": -4.3, "rot": 90, "size": 0.6, "hang": true, "y": 1.45 },
-    { "id": "i8", "product": "o6", "type": "frame", "x": -0.5, "z": -3.9, "rot": 0, "size": 0.5 },
-    { "id": "i9", "product": "o1", "type": "frame", "x": 0.5, "z": -3.9, "rot": 0, "size": 0.5 },
-    { "id": "i10", "product": "o8", "type": "frame", "x": 3.15, "z": -2.6, "rot": -90, "size": 0.5 },
-    { "id": "i11", "product": "o12", "type": "frame", "x": -0.6, "z": -7.35, "rot": 0, "size": 0.48 }
-  ]
+    {
+      "id": "i1",
+      "product": "o14",
+      "type": "frame",
+      "x": -1.18,
+      "z": 3.75,
+      "rot": 0,
+      "size": 0.36
+    },
+    {
+      "id": "i2",
+      "product": "o9",
+      "type": "frame",
+      "x": -0.72,
+      "z": 3.5,
+      "rot": 0,
+      "size": 0.44
+    },
+    {
+      "id": "i3",
+      "product": "o13",
+      "type": "frame",
+      "x": 0.05,
+      "z": 3.5,
+      "rot": 0,
+      "size": 0.5
+    },
+    {
+      "id": "i4",
+      "product": "o7",
+      "type": "frame",
+      "x": 1.0,
+      "z": 3.5,
+      "rot": 0,
+      "size": 0.5
+    },
+    {
+      "id": "i5",
+      "product": "o15",
+      "type": "frame",
+      "x": 3.3,
+      "z": 5.3,
+      "rot": -90,
+      "size": 0.5
+    },
+    {
+      "id": "i6",
+      "product": "o11",
+      "type": "frame",
+      "x": -3.97,
+      "z": -2.9,
+      "rot": 90,
+      "size": 0.7,
+      "hang": true,
+      "y": 1.45
+    },
+    {
+      "id": "i7",
+      "product": "o10",
+      "type": "frame",
+      "x": -3.97,
+      "z": -4.3,
+      "rot": 90,
+      "size": 0.6,
+      "hang": true,
+      "y": 1.45
+    },
+    {
+      "id": "i8",
+      "product": "o6",
+      "type": "frame",
+      "x": -0.5,
+      "z": -3.9,
+      "rot": 0,
+      "size": 0.5
+    },
+    {
+      "id": "i9",
+      "product": "o1",
+      "type": "frame",
+      "x": 0.5,
+      "z": -3.9,
+      "rot": 0,
+      "size": 0.5
+    },
+    {
+      "id": "i10",
+      "product": "o8",
+      "type": "frame",
+      "x": 3.15,
+      "z": -2.6,
+      "rot": -90,
+      "size": 0.5
+    },
+    {
+      "id": "i11",
+      "product": "o12",
+      "type": "frame",
+      "x": -0.6,
+      "z": -7.35,
+      "rot": 0,
+      "size": 0.48
+    }
+  ],
+  "shop": {
+    "name": "오하나에 OHANAE",
+    "url": "https://ohanae.kr",
+    "products": "https://ohanae.kr/PRODUCT",
+    "shipping": 3000,
+    "freeShippingOver": 80000
+  }
 }
