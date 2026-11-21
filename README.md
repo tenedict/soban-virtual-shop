@@ -28,7 +28,7 @@ GitHub Pages에서 정적 사이트로 배포됩니다.
 쇼룸은 그 결과(`3d/assets/`)를 불러오기만 해서, 실시간 조명 계산이 없고 폰에서도 가볍습니다.
 
 - `3d/assets/room.glb` — 방의 모양과 재질 · `lm_*.jpg` — 구운 빛 · `env_*.hdr` — 방마다 찍은 360° 사진(반사용) · `sky.jpg` — 창밖 풍경(3D 로 지은 광안리)
-- `3d/blender/build_room.py` — 방을 짓고 굽는 스크립트. 가구 자리는 `space.js` 에서 뽑은 `blender/space.json` 을 따릅니다.
+- `3d/blender/build_room.py` — 방을 짓고 굽는 스크립트. 가구 자리는 `space.js` 에서 뽑은 `blender/space.json` 을 따릅니다. 테이블은 얇은 트래버틴 상판(둥근 모서리)에 짙은 월넛 세로 살 기둥 다리입니다.
 
 방을 고쳐 다시 만들려면(Blender 5 이상, 15분쯤 걸립니다):
 

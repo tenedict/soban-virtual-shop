@@ -259,14 +259,6 @@
       if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); }
       return t;
     }
-    const lace = color => canvasTexture(256, 256, (g, w, h) => {
-      g.fillStyle = color; g.fillRect(0, 0, w, h);
-      g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 2;
-      for (let y = 16; y < h; y += 32) for (let x = (y / 32 % 2) * 16 + 16; x < w; x += 32) {
-        g.beginPath(); for (let a = 0; a < 6; a++) { const t = a / 6 * Math.PI * 2; g.moveTo(x, y); g.lineTo(x + Math.cos(t) * 9, y + Math.sin(t) * 9); } g.stroke();
-        g.beginPath(); g.arc(x, y, 11, 0, Math.PI * 2); g.stroke();
-      }
-    }, [2, 1]);
     // bg 를 비우면 글씨만 있는 투명한 판이 된다
     function textTexture(lines, { w = 1024, h = 256, bg = null, fg = '#f6efe2', size = 92, font = '"Gowun Batang", serif' } = {}) {
       return canvasTexture(w, h, g => {
@@ -357,15 +349,6 @@
     const LOGO_LINES = ['おはなえ', 'OHANAE  ·  MY SWEET CAKE HOUSE'], LOGO_FONT = '"Zen Antique", "Gowun Batang", serif';
     sign(LOGO_LINES, -2.3, 1.95, .105, 0, 1.8, { size: 120, font: LOGO_FONT, fg: '#2a2622' });
     sign(LOGO_LINES, -1.5, 2.3, -DEPTH + .034, 0, 2.6, { size: 120, font: LOGO_FONT });
-
-    // 테이블 위 레이스 깔개
-    function runner(id, dx, w, d, color) {
-      const f = FURNITURE.find(o => o.id === id);
-      const r = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: lace(color), roughness: .9 }));
-      r.rotation.x = -Math.PI / 2; r.position.set(f.x + dx, f.h + .003, f.z); scene.add(r);
-    }
-    runner('tableA', -.95, .7, 1.1, '#efe9de'); runner('tableA', .05, .7, 1.1, '#6e4b34'); runner('tableA', 1.0, .7, 1.1, '#4b2a4a');
-    runner('tableB', -.5, .8, 1.0, '#4b2a4a'); runner('tableB', .5, .8, 1.0, '#efe9de');
 
     /* 부딪히는 상자(xz 평면): 가구 · 화분 · 큰 소품. 모양은 room.glb 에 있고 자리는 space.js 가 정한다 */
     const obstacles = [

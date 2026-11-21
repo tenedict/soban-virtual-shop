@@ -2,7 +2,8 @@
   proc/wall_diff.jpg        미장 벽을 더 밝고 덜 누렇게
   proc/marble_diff.jpg      대리석 밝기를 0.9배로(너무 흰 바닥은 빛을 과하게 되튕긴다)
   proc/marble_rough.jpg     대리석을 더 매끈하게
-  proc/travertine_rough.jpg 트래버틴을 광택 없는 마감으로"""
+  proc/travertine_rough.jpg 트래버틴을 광택 없는 마감으로
+  proc/walnut_diff.jpg      오크 무늬목을 짙은 월넛 색으로 물들인 것(테이블 기둥 다리)"""
 import os, sys
 from PIL import Image, ImageEnhance
 
@@ -14,4 +15,7 @@ Image.blend(wall, Image.new('RGB', wall.size, (246, 240, 230)), .5).save('proc/w
 Image.open('textures/Marble019/diff.jpg').convert('RGB').point(lambda v: int(v * .9)).save('proc/marble_diff.jpg', quality=90)
 Image.open('textures/Marble019/rough.jpg').convert('L').point(lambda v: int(v * .55)).save('proc/marble_rough.jpg', quality=90)
 Image.open('textures/Travertine009/rough.jpg').convert('L').point(lambda v: min(255, int(v * .6 + 135))).save('proc/travertine_rough.jpg', quality=90)
+oak = Image.open('textures/oak_veneer_01/diff.jpg').convert('RGB')
+r, g, b = ImageEnhance.Contrast(oak).enhance(1.25).split()
+Image.merge('RGB', (r.point(lambda v: int(v * .40)), g.point(lambda v: int(v * .31)), b.point(lambda v: int(v * .27)))).save('proc/walnut_diff.jpg', quality=90)
 print('done')

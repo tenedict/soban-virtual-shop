@@ -85,11 +85,13 @@ MAT = {
     'marble': tex_mat('marble', T('proc', 'marble_diff.jpg'), T('proc', 'marble_rough.jpg'), T('textures', 'Marble019', 'nor.jpg'), .4),
     'travertine': tex_mat('travertine', T('textures', 'Travertine009', 'diff.jpg'), T('proc', 'travertine_rough.jpg'), T('textures', 'Travertine009', 'nor.jpg'), .6),
     'oak': tex_mat('oak', T('textures', 'oak_veneer_01', 'diff.jpg'), T('textures', 'oak_veneer_01', 'rough.jpg'), T('textures', 'oak_veneer_01', 'nor.jpg'), .7),
+    'walnut': tex_mat('walnut', T('proc', 'walnut_diff.jpg'), T('textures', 'oak_veneer_01', 'rough.jpg'), T('textures', 'oak_veneer_01', 'nor.jpg'), .7),
     'wall': tex_mat('wall', T('proc', 'wall_diff.jpg'), T('textures', 'beige_wall_001', 'rough.jpg'), T('textures', 'beige_wall_001', 'nor.jpg'), .5),
     'rug': tex_mat('rug', T('textures', 'Carpet016', 'diff.jpg'), T('textures', 'Carpet016', 'rough.jpg'), T('textures', 'Carpet016', 'nor.jpg'), 1.0),
     'ceiling': flat_mat('ceiling', (.9, .88, .84), .95),
     'grout': flat_mat('grout', (.5, .47, .43), .9),
     'metal': flat_mat('metal', (.03, .028, .026), .42, .8),
+    'brass': flat_mat('brass', (.74, .58, .34), .34, 1.0),
     'backing': flat_mat('backing', (.09, .07, .05), .9),
     'strip': flat_mat('strip', (1, .86, .66), .5, emission=70.0),
     'spot': flat_mat('spot', (1, .9, .76), .5, emission=40.0),
@@ -133,6 +135,43 @@ def cylinder(name, x, y, z, radius, depth, mat, group, axis='y', segments=48, uv
     bm.to_mesh(me); bm.free()
     ob = link(bpy.data.objects.new(name, me), group)
     ob.location = P(x, y, z); me.materials.append(mat)
+    cube_uv(ob, uv)
+    return ob
+
+def outline(w, d, r, seg=7):
+    """모서리를 둥글린 네모의 테두리 점(위에서 봤을 때 반시계 방향)."""
+    pts = []
+    for cx, cy, a0 in ((w / 2 - r, d / 2 - r, 0), (-w / 2 + r, d / 2 - r, 90), (-w / 2 + r, -d / 2 + r, 180), (w / 2 - r, -d / 2 + r, 270)):
+        for k in range(seg + 1):
+            a = math.radians(a0 + 90 * k / seg); pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    return pts
+
+def slab(name, x, z, w, d, y0, y1, mat, group, radius=.14, under=.03, ease=.004, uv=1.0):
+    """모서리가 둥근 얇은 상판. 아랫면을 안쪽으로 비스듬히 깎아(under) 옆에서 보면 판이 훨씬 얇아 보인다."""
+    me = bpy.data.meshes.new(name); bm = bmesh.new(); mid = (y0 + y1) / 2
+    rings = [(under, y0), (0, y0 + (y1 - y0) * .62), (0, y1 - ease), (ease, y1)]      # (안으로 들인 폭, 높이)
+    loops = [[bm.verts.new((px, py, y - mid)) for px, py in outline(w - 2 * i, d - 2 * i, radius - i * .6)] for i, y in rings]
+    n = len(loops[0])
+    for a, b in zip(loops, loops[1:]):
+        for i in range(n):
+            j = (i + 1) % n; bm.faces.new((a[i], a[j], b[j], b[i]))
+    bm.faces.new(loops[-1]); bm.faces.new(loops[0][::-1])
+    bm.to_mesh(me); bm.free()
+    ob = link(bpy.data.objects.new(name, me), group); ob.location = P(x, mid, z); me.materials.append(mat)
+    cube_uv(ob, uv)
+    return ob
+
+def reeded(name, x, z, radius, y0, y1, mat, group, pitch=.046, depth=.013, seg=6, uv=1.0):
+    """세로로 둥근 살이 촘촘히 둘러진 기둥(탬버 기둥). 위아래 면은 가려지므로 만들지 않는다."""
+    count = max(12, round(2 * math.pi * radius / pitch))
+    me = bpy.data.meshes.new(name); bm = bmesh.new(); mid = (y0 + y1) / 2; lo, hi = [], []
+    for i in range(count * seg):
+        a = 2 * math.pi * i / (count * seg); r = radius - depth * (1 - math.sin(math.pi * (i % seg) / seg))
+        lo.append(bm.verts.new((r * math.cos(a), r * math.sin(a), y0 - mid))); hi.append(bm.verts.new((r * math.cos(a), r * math.sin(a), y1 - mid)))
+    for i in range(len(lo)):
+        j = (i + 1) % len(lo); bm.faces.new((lo[i], lo[j], hi[j], hi[i])).smooth = True
+    bm.to_mesh(me); bm.free()
+    ob = link(bpy.data.objects.new(name, me), group); ob.location = P(x, mid, z); me.materials.append(mat)
     cube_uv(ob, uv)
     return ob
 
@@ -248,12 +287,15 @@ def build_slats():
 def build_furniture():
     for f in space['FURNITURE']:
         x, z, w, d, h = f['x'], f['z'], f['w'], f['d'], f['h']
-        if f['kind'] == 'table':    # 두꺼운 오크 상판을 트래버틴 판 다리 둘이 받친다
-            along = w >= d
-            box(f['id'] + '_top', x - w / 2, x + w / 2, h - .06, h, z - d / 2, z + d / 2, MAT['oak'], 'furn', bevel=.006, uv=1.4, swap=along)
-            for s in (-1, 1):
-                if along: box(f['id'] + '_leg', x + s * (w / 2 - .32) - .07, x + s * (w / 2 - .32) + .07, 0, h - .06, z - d / 2 + .08, z + d / 2 - .08, MAT['travertine'], 'furn', bevel=.008, uv=1.2)
-                else: box(f['id'] + '_leg', x - w / 2 + .08, x + w / 2 - .08, 0, h - .06, z + s * (d / 2 - .32) - .07, z + s * (d / 2 - .32) + .07, MAT['travertine'], 'furn', bevel=.008, uv=1.2)
+        if f['kind'] == 'table':    # 얇은 트래버틴 상판(둥근 모서리)을 짙은 월넛 탬버 기둥이 받친다. 기둥 발치에는 황동 띠
+            top = .04; long = max(w, d)
+            slab(f['id'] + '_top', x, z, w, d, h - top, h, MAT['travertine'], 'furn', radius=min(w, d) * .14, uv=1.2)
+            r = min(w, d) * .225 if long > 1.6 else min(w, d) * .29
+            for s in ((-1, 1) if long > 1.6 else (0,)):
+                px, pz = (x + s * long * .3, z) if w >= d else (x, z + s * long * .3)
+                cylinder(f['id'] + '_foot', px, .011, pz, r + .006, .022, MAT['brass'], 'furn', segments=64)
+                reeded(f['id'] + '_leg', px, pz, r, .022, h - top - .018, MAT['walnut'], 'furn', uv=1.3)
+                cylinder(f['id'] + '_neck', px, h - top - .009, pz, r - .05, .018, MAT['metal'], 'furn', segments=48)
             if max(w, d) > 2:       # 큰 테이블 밑 둥근 러그
                 cylinder(f['id'] + '_rug', x, .007, z, max(w, d) / 2 + .55, .014, MAT['rug'], 'furn', segments=96, uv=.9)
         else:
