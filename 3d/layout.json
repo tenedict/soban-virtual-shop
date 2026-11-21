@@ -154,75 +154,103 @@
     }
   ],
   "models": [
-    "purple-lace-flower-pouch.glb"
+    "purple-lace-flower-pouch.glb",
+    "bold-flower-pouch.glb",
+    "two-tuck-lace-shoulder-bag.glb",
+    "hanging-tissue-case.glb",
+    "brown-lace-book-cover.glb",
+    "white-lace-lantern-cover.glb",
+    "gift-wrap.glb",
+    "white-lace-tea-coaster.glb",
+    "white-lace-table-mat.glb",
+    "brown-table-mat.glb",
+    "purple-lace-mat.glb"
   ],
   "items": [
     {
       "id": "i1",
       "product": "o14",
-      "type": "frame",
+      "type": "model",
       "x": -1.18,
       "z": 3.75,
       "rot": 0,
-      "size": 0.36
+      "size": 0.24,
+      "model": "white-lace-tea-coaster.glb",
+      "lean": 14,
+      "glow": 0.2
     },
     {
       "id": "i2",
       "product": "o9",
-      "type": "frame",
+      "type": "model",
       "x": -0.72,
       "z": 3.5,
       "rot": 0,
-      "size": 0.44
+      "size": 0.44,
+      "model": "white-lace-table-mat.glb",
+      "lean": 14,
+      "glow": 0.2
     },
     {
       "id": "i3",
       "product": "o13",
-      "type": "frame",
+      "type": "model",
       "x": 0.05,
       "z": 3.5,
       "rot": 0,
-      "size": 0.5
+      "size": 0.44,
+      "model": "brown-table-mat.glb",
+      "lean": 14,
+      "glow": 0.9
     },
     {
       "id": "i4",
       "product": "o7",
-      "type": "frame",
+      "type": "model",
       "x": 1.0,
       "z": 3.5,
       "rot": 0,
-      "size": 0.5
+      "size": 0.56,
+      "model": "purple-lace-mat.glb",
+      "lean": 14,
+      "glow": 0.9
     },
     {
       "id": "i5",
       "product": "o15",
-      "type": "frame",
+      "type": "model",
       "x": 3.3,
       "z": 5.3,
       "rot": -90,
-      "size": 0.5
+      "size": 0.42,
+      "model": "gift-wrap.glb",
+      "glow": 0.15
     },
     {
       "id": "i6",
       "product": "o11",
-      "type": "frame",
+      "type": "model",
       "x": -3.97,
       "z": -2.9,
       "rot": 90,
-      "size": 0.7,
+      "size": 0.78,
       "hang": true,
-      "y": 1.45
+      "y": 1.45,
+      "model": "two-tuck-lace-shoulder-bag.glb",
+      "glow": 0.8
     },
     {
       "id": "i7",
       "product": "o10",
-      "type": "frame",
+      "type": "model",
       "x": -3.97,
       "z": -4.3,
       "rot": 90,
-      "size": 0.6,
+      "size": 0.56,
       "hang": true,
-      "y": 1.45
+      "y": 1.45,
+      "model": "hanging-tissue-case.glb",
+      "glow": 0.15
     },
     {
       "id": "i8",
@@ -237,29 +265,38 @@
     {
       "id": "i9",
       "product": "o1",
-      "type": "frame",
+      "type": "model",
       "x": 0.5,
       "z": -3.9,
-      "rot": 0,
-      "size": 0.5
+      "rot": -20,
+      "size": 0.34,
+      "model": "bold-flower-pouch.glb",
+      "glow": 0.15
     },
     {
       "id": "i10",
       "product": "o8",
-      "type": "frame",
+      "type": "model",
       "x": 3.15,
       "z": -2.6,
       "rot": -90,
-      "size": 0.5
+      "size": 0.4,
+      "model": "brown-lace-book-cover.glb",
+      "lean": 12,
+      "glow": 0.9
     },
     {
       "id": "i11",
       "product": "o12",
-      "type": "frame",
+      "type": "model",
       "x": -0.6,
       "z": -7.35,
       "rot": 0,
-      "size": 0.48
+      "size": 0.5,
+      "model": "white-lace-lantern-cover.glb",
+      "cord": true,
+      "y": 1.55,
+      "glow": 0.35
     }
   ],
   "shop": {

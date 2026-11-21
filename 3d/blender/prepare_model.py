@@ -1,5 +1,6 @@
 """사진에서 만든 3D 모델(.glb)을 쇼룸에 놓기 좋게 다듬는다.
-  Blender -b -P prepare_model.py -- <받은 파일.glb> <../models/이름.glb> [삼각형 수=12000] [그림 크기=1024]
+  Blender -b -P prepare_model.py -- <받은 파일.glb> <../models/이름.glb> [삼각형 수=12000] [그림 크기=1024] [flat|solid] [돌릴 각도] [몸통 돌릴 각도]
+flat 을 붙이면 매트처럼 납작한 것을 세워 놓는다(쇼룸에서는 lean 으로 뒤로 기대 세운다). 돌릴 각도는 앞에서 봤을 때 시계 방향으로 돌리는 도수.
 
 AI 가 사진 한 장으로 만든 모델은 천도 가죽처럼 번들거리게 나오고 파일이 크다(10MB 안팎). 여기서
   - 번들거림을 없애 천처럼 보이게 하고(거칠기를 높이고, 요철은 절반만),
@@ -7,13 +8,16 @@ AI 가 사진 한 장으로 만든 모델은 천도 가죽처럼 번들거리게
   - 밑바닥 가운데가 원점에 오게 놓는다.
 그 뒤 `npx @gltf-transform/cli@4 meshopt <파일> <파일>` 로 한 번 더 압축한다.
 """
-import bpy, sys, os
+import bpy, sys, os, math
 from mathutils import Vector, Matrix
 
 args = sys.argv[sys.argv.index('--') + 1:]
 src, dst = args[0], args[1]
 tris_target = int(args[2]) if len(args) > 2 else 12000
 tex_size = int(args[3]) if len(args) > 3 else 1024
+roll = float(args[5]) if len(args) > 5 else 0
+yaw = float(args[6]) if len(args) > 6 else 0
+flat = len(args) > 4 and args[4] == 'flat' # 매트처럼 납작한 것: 얇은 쪽이 앞뒤가 되게 세운다(윗면이 앞을 본다)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=src)
@@ -35,6 +39,16 @@ if tris > tris_target:
     me = bpy.data.meshes.new_from_object(ob.evaluated_get(bpy.context.evaluated_depsgraph_get()))
     old = ob.data; ob.modifiers.clear(); ob.data = me; bpy.data.meshes.remove(old)
 after = sum(len(p.vertices) - 2 for p in ob.data.polygons)
+
+# 납작한 것은 세운다: 누워 있으면(위아래가 얇으면) 윗면이 앞(-Y)을 보게, 옆으로 서 있으면 앞을 보게 돌린다
+if flat:
+    cos = [v.co for v in ob.data.vertices]
+    dim = [max(c[i] for c in cos) - min(c[i] for c in cos) for i in range(3)]
+    thin = dim.index(min(dim))
+    if thin == 2: ob.data.transform(Matrix.Rotation(math.radians(90), 4, 'X'))
+    elif thin == 0: ob.data.transform(Matrix.Rotation(math.radians(90), 4, 'Z'))
+if yaw: ob.data.transform(Matrix.Rotation(math.radians(yaw), 4, 'Z'))   # 앞면이 옆을 보고 있으면 위에서 봤을 때 반시계 방향으로 돌려 앞을 보게 한다
+if roll: ob.data.transform(Matrix.Rotation(math.radians(roll), 4, 'Y'))   # 앞에서 봤을 때 무늬가 옆으로 누워 있으면 바로 세운다
 
 # 밑바닥 가운데를 원점으로
 cos = [v.co for v in ob.data.vertices]

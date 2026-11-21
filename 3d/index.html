@@ -420,10 +420,13 @@
       }, undefined, settle);
     }
     function buildModel(it, p, base, ry, entry) {
-      const size = it.size || .4, g = new THREE.Group(), pivot = new THREE.Group();
+      // 놓는 방법 넷: 그냥 세워서 천천히 돌리기 / lean(도) 만큼 뒤로 기대 세우기(매트처럼 납작한 것) / hang 벽에 걸기 / cord 천장에서 줄로 내려 달기(등갓).
+      // 기대 세운 것과 벽에 건 것은 돌지 않는다. glow 를 주면 스스로 조금 빛난다
+      const size = it.size || .4, hang = !!it.hang, cord = !hang && !!it.cord, lean = hang || cord ? 0 : rad(it.lean || 0), still = hang || lean > 0 || it.spin === false;
+      const g = new THREE.Group(), pivot = new THREE.Group();
       g.add(pivot); g.position.set(it.x, base, it.z); g.rotation.y = ry;
       scene.add(g); pickables.push(g);
-      Object.assign(entry, { root: g, cy: base + size / 2, pivot, highlight: on => { pivot.scale.setScalar(on ? 1.06 : 1); } });
+      Object.assign(entry, { root: g, cy: hang || cord ? base : base + size / 2, pivot: still ? null : pivot, highlight: on => { pivot.scale.setScalar(on ? 1.06 : 1); } });
       pending++;
       const fallback = () => { scene.remove(g); entry.pivot = null; buildFrame({ ...it, size: Math.max(size, .4) }, p, base, ry, entry); settle(); };
       modelUrl(it.model || '').then(url => gltf.load(url, res => {
@@ -433,9 +436,31 @@
         b.setFromObject(m);
         const c = b.getCenter(new THREE.Vector3());
         m.position.x -= c.x; m.position.z -= c.z; m.position.y -= b.min.y;
-        m.traverse(o => { if (o.isMesh) o.material.envMapIntensity = 1.5; });   // 굽지 않은 상품 모델은 방의 빛을 조금 더 받게 한다(어두운 천도 무늬가 보이게)
-        pivot.add(m); tagParts(g, p.id);
-        entry.cy = base + (b.max.y - b.min.y) / 2;
+        m.traverse(o => {
+          if (!o.isMesh) return;
+          o.material.envMapIntensity = 1.5;
+          if (it.glow) { o.material.emissive.set(cord ? '#fff3dc' : '#ffffff'); o.material.emissiveMap = o.material.map; o.material.emissiveIntensity = it.glow; }
+        });   // 굽지 않은 상품 모델은 방의 빛을 조금 더 받게 한다(어두운 천도 무늬가 보이게)
+        const h = b.max.y - b.min.y, d = b.max.z - b.min.z;
+        entry.cy = base + h / 2;
+        if (hang) {   // 벽에 붙이고, 위쪽에 나무 걸이를 하나 단다
+          m.position.y -= h / 2; m.position.z += d / 2 - .02;
+          const peg = new THREE.Mesh(new THREE.CylinderGeometry(.011, .011, d + .05, 12), mat.oak);
+          peg.rotation.x = Math.PI / 2; peg.position.set(0, h / 2 - .03, (d + .05) / 2 - .03); pivot.add(peg);
+          entry.cy = base;
+        } else if (cord) {   // 가운데가 높이 y 에 오게 띄우고, 천장까지 가는 줄을 단다
+          m.position.y -= h / 2;
+          const len = Math.max(H - base - h / 2, .05), line = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, len, 8), new THREE.MeshStandardMaterial({ color: '#efe9dd', roughness: .7 }));
+          line.position.y = h / 2 + len / 2 - .02; pivot.add(line);
+          entry.cy = base;
+        } else if (lean) {   // 액자처럼 뒤로 기대 세우고, 뒤에 받침 다리를 댄다
+          const holder = new THREE.Group(); holder.add(m); holder.rotation.x = -lean; holder.position.y = d / 2 * Math.sin(lean); pivot.add(holder);
+          const L = h * .78, a = .35, topY = L * Math.cos(a), leg = new THREE.Mesh(new THREE.BoxGeometry(.018, L, .018), mat.oak);
+          leg.rotation.x = a; leg.position.set(0, topY / 2, -topY * Math.tan(lean) - d / 2 - .012 - L / 2 * Math.sin(a)); pivot.add(leg);
+          entry.cy = base + h * Math.cos(lean) / 2;
+        }
+        if (!lean) pivot.add(m);
+        tagParts(g, p.id);
         settle();
       }, undefined, fallback), fallback);
     }
@@ -445,6 +470,7 @@
       const ry = rad(it.rot || 0);
       let base;
       if (it.hang) base = it.y ?? 1.45;
+      else if (it.cord && it.type === 'model') base = it.y ?? 1.55;
       else {
         const f = furnitureAt(it.x, it.z);
         if (f) base = f.h;
@@ -455,7 +481,7 @@
           base = PLINTH.h;
         }
       }
-      if (!it.hang) blob(it.x, base + .004, it.z, (it.size || .5) * 1.5, (it.size || .5) * 1.1, ry);
+      if (!it.hang && !(it.cord && it.type === 'model')) blob(it.x, base + .004, it.z, (it.size || .5) * 1.5, (it.size || .5) * 1.1, ry);
       const entry = { id: p.id, nx: Math.sin(ry), nz: Math.cos(ry) };
       if (it.type === 'model') buildModel(it, p, base, ry, entry); else buildFrame(it, p, base, ry, entry);
       entries.push(entry);
