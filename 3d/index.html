@@ -381,7 +381,7 @@
     /* ───────── 물건 놓기 (layout.items) ─────────
        type frame = 사진 액자, model = 3D 모델(.glb). 가구 위면 그 위에, 바닥이면 받침대 위에, hang 이면 벽 높이 y 에 건다. */
     const entries = [];
-    const textures = new THREE.TextureLoader(), gltf = new GLTFLoader();
+    const textures = new THREE.TextureLoader(), gltf = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
     let pending = 0, settled = 0;
     function settle() {
       settled++; invalidate();
@@ -433,6 +433,7 @@
         b.setFromObject(m);
         const c = b.getCenter(new THREE.Vector3());
         m.position.x -= c.x; m.position.z -= c.z; m.position.y -= b.min.y;
+        m.traverse(o => { if (o.isMesh) o.material.envMapIntensity = 1.5; });   // 굽지 않은 상품 모델은 방의 빛을 조금 더 받게 한다(어두운 천도 무늬가 보이게)
         pivot.add(m); tagParts(g, p.id);
         entry.cy = base + (b.max.y - b.min.y) / 2;
         settle();

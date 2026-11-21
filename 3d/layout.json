@@ -153,7 +153,9 @@
       "story": ""
     }
   ],
-  "models": [],
+  "models": [
+    "purple-lace-flower-pouch.glb"
+  ],
   "items": [
     {
       "id": "i1",
@@ -225,11 +227,12 @@
     {
       "id": "i8",
       "product": "o6",
-      "type": "frame",
+      "type": "model",
       "x": -0.5,
       "z": -3.9,
-      "rot": 0,
-      "size": 0.5
+      "rot": 20,
+      "size": 0.34,
+      "model": "purple-lace-flower-pouch.glb"
     },
     {
       "id": "i9",
