@@ -293,8 +293,8 @@ def build_furniture():
             r = min(w, d) * .225 if long > 1.6 else min(w, d) * .29
             for s in ((-1, 1) if long > 1.6 else (0,)):
                 px, pz = (x + s * long * .3, z) if w >= d else (x, z + s * long * .3)
-                cylinder(f['id'] + '_foot', px, .011, pz, r + .006, .022, MAT['brass'], 'furn', segments=64)
-                reeded(f['id'] + '_leg', px, pz, r, .022, h - top - .018, MAT['walnut'], 'furn', uv=1.3)
+                cylinder(f['id'] + '_foot', px, .016, pz, r + .022, .032, MAT['brass'], 'furn', segments=64)   # 살보다 넉넉히 넓어야 끊겨 보이지 않는다
+                reeded(f['id'] + '_leg', px, pz, r, .032, h - top - .018, MAT['walnut'], 'furn', uv=1.3)
                 cylinder(f['id'] + '_neck', px, h - top - .009, pz, r - .05, .018, MAT['metal'], 'furn', segments=48)
             if max(w, d) > 2:       # 큰 테이블 밑 둥근 러그
                 cylinder(f['id'] + '_rug', x, .007, z, max(w, d) / 2 + .55, .014, MAT['rug'], 'furn', segments=96, uv=.9)
